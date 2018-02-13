@@ -450,3 +450,20 @@ def compute_height(filename):
             }
 
     return height, atts
+
+def compute_TA(filename):
+    """ Function to calculate temperature in kelvin from WRF outputs
+        It also provides variable attributes CF-Standard
+    """
+    from wrf import getvar
+
+    ncfile = nc.Dataset(filename,'r')
+
+    tk = getvar(ncfile,"tk")
+
+    atts = {"standard_name": "Temperature",
+            "long_name":  "air_temperature",
+            "units"    :  "K"                      ,
+            "hgt"       :  ""                    ,
+            }
+    return tk,atts
