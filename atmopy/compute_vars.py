@@ -20,6 +20,126 @@
 
 import netCDF4 as nc
 import numpy as np
+import datetime as dt
+
+
+def compute_WRFvar (filename,varname):
+    """ Function to compute a variable name from wrf outputs
+        filename: wrfout (or other file name used as input)
+        varname : variable to be extracted or computed from WRF outputs
+    """
+
+    ncfile = nc.Dataset(filename,'r')
+
+
+
+    if varname in ncfile.variables.keys():
+        varval = ncfile.variables[varname][:]
+        varatt={}
+        for att in ncfile.variables[varname].ncattrs():
+            varatt[att] = getattr(ncfile.variables[varname],att)
+
+    else:
+        #Old version when is out of the functtion
+        #compute=getattr('compute_'+varname)
+        method_name='compute_%s' %(varname)
+        possibles = globals().copy()
+        possibles.update(locals())
+        compute=possibles.get(method_name)
+
+        varval, varatt=compute(filename)
+
+    ncfile.close()
+
+    return varval,varatt
+
+
+
+###########################################################
+###########################################################
+
+def create_netcdf(var,filename):
+    print('\n Create output file %s') %(filename)
+
+    otimes = var['times']
+    outfile = nc.Dataset(filename,'w',format='NETCDF3_CLASSIC')
+
+    outfile.createDimension('time',None)
+    outfile.createDimension('bnds',2)
+    if var['values'].ndim == 4:
+
+        outfile.createDimension('y',var['values'].shape[2])
+        outfile.createDimension('x',var['values'].shape[3])
+        outfile.createDimension('lev',var['values'].shape[1])
+
+        outvar  = outfile.createVariable(var['varname'],'f8',('time','lev','y','x'),fill_value=1e20)
+
+    if var['values'].ndim == 3:
+        outfile.createDimension('y',var['values'].shape[1])
+        outfile.createDimension('x',var['values'].shape[2])
+
+        outvar  = outfile.createVariable(var['varname'],'f8',('time','y','x'),fill_value=1e20)
+
+    outtime = outfile.createVariable('time','f8','time',fill_value=1e20)
+    outtime_bnds = outfile.createVariable('time_bnds','f8',('time','bnds'),fill_value=1e20)
+    outlat  = outfile.createVariable('lat','f8',('y','x'),fill_value=1e20)
+    outlon  = outfile.createVariable('lon','f8',('y','x'),fill_value=1e20)
+
+    if var['values'].ndim == 4:
+        outlev = outfile.createVariable('levels','f8',('lev'),fill_value=1e20)
+
+        setattr(outlev,"standard_name","model-level")
+        setattr(outlev,"long_name","Model level")
+        setattr(outlev,"units","eta levels")
+        setattr(outlev,"_CoordinateAxisType","z")
+
+    setattr(outlat,"standard_name","latitude")
+    setattr(outlat,"long_name","Latitude")
+    setattr(outlat,"units","degrees_north")
+    setattr(outlat,"_CoordinateAxisType","Lat")
+
+
+    setattr(outlon,"standard_name","longitude")
+    setattr(outlon,"long_name","Longitude")
+    setattr(outlon,"units","degrees_east")
+    setattr(outlon,"_CoordinateAxisType","Lon")
+
+    setattr(outtime,"standard_name","time")
+    setattr(outtime,"long_name","Time")
+    setattr(outtime,"units","hours since 1949-12-01 00:00:00")
+    setattr(outtime,"calendar","standard")
+
+    setattr(outtime_bnds,"standard_name","time_bnds")
+    setattr(outtime_bnds,"long_name","time_bounds")
+    setattr(outtime_bnds,"units","hours since 1949-12-01 00:00:00")
+    setattr(outtime_bnds,"calendar","standard")
+
+
+    step_seconds = np.int((otimes[1]-otimes[0]).total_seconds())
+
+    outtime[:] = nc.date2num([otimes[x] for x in range(len(otimes))],units='hours since 1949-12-01 00:00:00',calendar='standard')
+
+    outtime_bnds[:,0]=nc.date2num([otimes[x]-dt.timedelta(seconds=step_seconds/2.) for x in range(len(otimes))],units='hours since 1949-12-01 00:00:00',calendar='standard')
+    outtime_bnds[:,1]=nc.date2num([otimes[x]+dt.timedelta(seconds=step_seconds/2.) for x in range(len(otimes))],units='hours since 1949-12-01 00:00:00',calendar='standard')
+
+
+    outlat[:]  = var['lat'][:]
+    outlon[:]  = var['lon'][:]
+
+    outvar[:] = var['values'][:]
+
+    for outatt in var['atts'].keys():
+        setattr(outvar,outatt,var['atts'][outatt])
+
+    setattr(outfile,"creation_date",dt.datetime.today().strftime('%Y-%m-%d'))
+    setattr(outfile,'author','Daniel Argueso @UIB')
+    setattr(outfile,'contact','d.argueso@uib.es')
+    #setattr(outfile,'comments','files created from wrf outputs %s/%s' %(path_in,patt))
+
+    outfile.close()
+
+###########################################################
+###########################################################
 
 def compute_PR(filename):
     """Function to calculate precipitation flux from a wrf output

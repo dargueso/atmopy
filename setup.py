@@ -13,9 +13,10 @@ setup(name='atmopy',
       license='MIT',
       packages=['atmopy'],
       install_requires=[
-          'numpy','netcdf4','wrf-python','datetime','cPickle','re','pandas','matplotlib'
+          'numpy','netcdf4','wrf-python','datetime','pandas','matplotlib',
       ],
       zip_safe=False,
       test_suite='nose.collector',
       tests_require=['nose'],
+      scripts=['bin/get_wrfvar.py']
 )
