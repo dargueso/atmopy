@@ -87,11 +87,16 @@ def create_netcdf(var,filename):
 
     if var['values'].ndim == 4:
         outlev = outfile.createVariable('levels','f8',('lev'),fill_value=1e20)
-
-        setattr(outlev,"standard_name","model-level")
-        setattr(outlev,"long_name","Model level")
-        setattr(outlev,"units","eta levels")
-        setattr(outlev,"_CoordinateAxisType","z")
+        if var['varname']=='cloudfrac':
+            setattr(outlev,"standard_name","cloud-level")
+            setattr(outlev,"long_name","Clouds level")
+            setattr(outlev,"units","")
+            setattr(outlev,"_CoordinateAxisType","z")
+        else:
+            setattr(outlev,"standard_name","model-level")
+            setattr(outlev,"long_name","Model level")
+            setattr(outlev,"units","eta levels")
+            setattr(outlev,"_CoordinateAxisType","z")
 
     setattr(outlat,"standard_name","latitude")
     setattr(outlat,"long_name","Latitude")
@@ -401,15 +406,16 @@ def compute_cloudfrac(filename):
 
     cloudfrac = getvar(ncfile, "cloudfrac")
 
+
     atts = {"standard_name": "cloudfrac",
             "long_name":  "Cloud fraction",
             "units"    :  "%"                      ,
-            "hgt"       :  ""                    ,
-            }
+            "hgt"       :  "low_mid_high",
+            "low_thres": "300 m agl",
+            "mid_thres": "2000 m agl",
+            "high_thres": "6000 m agl",
 
-    if cloudfrac.ndim == 3:
-        #No times
-        cloudfrac = np.squeeze(cloudfrac[0,:,:])
+            }
 
     return cloudfrac, atts
 
@@ -467,3 +473,37 @@ def compute_TA(filename):
             "hgt"       :  ""                    ,
             }
     return tk,atts
+
+def compute_UA(filename):
+    """ Function to calculate earth-rotated Eastward wind components in m s-1 from WRF outputs
+        It also provides variable attributes CF-Standard
+    """
+    from wrf import getvar
+
+    ncfile = nc.Dataset(filename,'r')
+
+    ua = np.squeeze(getvar(ncfile,"uvmet")[0,:])
+
+    atts = {"standard_name": "eastward_wind",
+            "long_name":  "Eastward Wind",
+            "units"    :  "m s-1"                      ,
+            "hgt"       :  ""                    ,
+            }
+    return ua,atts
+
+def compute_VA(filename):
+    """ Function to calculate earth-rotated Northward wind components in m s-1 from WRF outputs
+        It also provides variable attributes CF-Standard
+    """
+    from wrf import getvar
+
+    ncfile = nc.Dataset(filename,'r')
+
+    va = np.squeeze(getvar(ncfile,"uvmet")[1,:])
+
+    atts = {"standard_name": "northward_wind",
+            "long_name":  "Northward Wind",
+            "units"    :  "m s-1"                      ,
+            "hgt"       :  ""                    ,
+            }
+    return va,atts
