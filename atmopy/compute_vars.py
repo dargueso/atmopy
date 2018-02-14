@@ -444,7 +444,7 @@ def compute_UA(filename):
 
     ncfile = nc.Dataset(filename,'r')
 
-    ua = np.squeeze(getvar(ncfile,"uvmet",wrf.ALL_TIMES)[0,:])
+    ua = np.squeeze( wrf.getvar(ncfile,"uvmet",wrf.ALL_TIMES)[0,:])
 
     atts = {"standard_name": "eastward_wind",
             "long_name":  "Eastward Wind",
@@ -461,7 +461,7 @@ def compute_VA(filename):
 
     ncfile = nc.Dataset(filename,'r')
 
-    va = np.squeeze(getvar(ncfile,"uvmet",wrf.ALL_TIMES)[1,:])
+    va = np.squeeze( wrf.getvar(ncfile,"uvmet",wrf.ALL_TIMES)[1,:])
 
     atts = {"standard_name": "northward_wind",
             "long_name":  "Northward Wind",
