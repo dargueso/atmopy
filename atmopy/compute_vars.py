@@ -314,7 +314,7 @@ def compute_uvmet10(filename):
     return wa,atts
 
 
-def compute_uvmet10_wdir(filename):
+def compute_WDIR10(filename):
     """ Function to calculate 10-m wind direction on Earth coordinates
         from WRF OUTPUTS
         It also provides variable attributes CF-Standard
@@ -335,7 +335,7 @@ def compute_uvmet10_wdir(filename):
 
     return uvmet10_wind,atts
 
-def compute_uvmet10_wspd(filename):
+def compute_WSPD10(filename):
     """ Function to calculate 10-m wind speed on Earth coordinates
         from WRF OUTPUTS
         It also provides variable attributes CF-Standard

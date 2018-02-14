@@ -2,7 +2,7 @@
 """ Get_WRFvar Program that gets a variable from a list of wrfout and create a netcdf
 
 Usage:
-    get_wrfvar.py [-s SM] [-e EM] [-x WRUN] [-i HOST] [-p PATT] VARNAME SY EY PATHIN PATHOUT
+    get_wrfvar.py [-s SM] [-e EM] [-x WRUN] [-i HOST] [-p PATT] [-d DOM] VARNAME SY EY PATHIN PATHOUT
     get_wrfvar.py (-h | --help)
     get_wrfvar.py --version
 
@@ -21,7 +21,9 @@ Options:
     -e EM --emonth=EM       Optional last month     [default: 12].
     -x WRUN --exp=WRUN      Optional experiment named   [default: WRF_TEST].
     -i HOST --inst=HOST     Optional institution name for output info   [default: WRF].
-    -p PATT --pattern=PATT  Optional starting pattern for wrfout [default: wrfout]
+    -p PATT --pattern=PATT  Optional starting pattern for wrfout [default: wrfout].
+    -d DOM --domain=DOM    Optional domain to process [default: d01].
+
 
 """
 
@@ -69,6 +71,8 @@ emonth = int(args['--emonth'])
 
 varname = args['VARNAME']
 
+dom = args['--domain']
+
 ###########################################################
 ###########################################################
 
@@ -77,17 +81,24 @@ m = smonth
 d = 1
 
 
+if not glob('%s/%s_%s*' %(path_in,patt,dom)):
+    raise Exception("ERROR: no available files in requested directory: %s/%s_%s*" %(path_in,patt,dom))
+
 while (y < eyear or (y == eyear and m <= emonth)):
     print y, m, d
 
     #print "Extracting variables for day %s-%s-%s" %(y,str(m).rjust(2,"0"),str(d).rjust(2,"0"))
 
+    if not glob('%s/%s_%s_%s*' %(path_in,patt,dom,y)):
+        raise Exception("ERROR: no available files for year %s requested directory: %s/%s_%s_%s*" %(y,path_in,patt,dom,y))
 
 
     sdate="%s-%s-%s" %(y,str(m).rjust(2,"0"),str(d).rjust(2,"0"))
 
 
-    filesin = sorted(glob('%s/%s_d01_%s*' %(path_in,patt,sdate)))
+    filesin = sorted(glob('%s/%s_%s_%s*' %(path_in,patt,dom,sdate)))
+
+
 
     if not filesin:
         print "No available files for day %s" %(sdate)
