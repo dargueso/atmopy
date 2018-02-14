@@ -21,6 +21,7 @@
 import netCDF4 as nc
 import numpy as np
 import datetime as dt
+import wrf as wrf
 
 
 def compute_WRFvar (filename,varname):
@@ -227,15 +228,15 @@ def compute_PSL(filename):
         Note: this function was also coded manually for in compute_vars.py
     """
 
-    from wrf import getvar,smooth2d
+
 
     ncfile = nc.Dataset(filename,'r')
 
     # Get the sea level pressure using wrf-python
-    psl = getvar(ncfile, "slp")
+    psl = wrf.getvar(ncfile, "slp",wrf.ALL_TIMES)
 
     # Smooth the sea level pressure since it tends to be noisy near the mountains
-    smooth_psl = smooth2d(psl, 3)
+    smooth_psl = wrf.smooth2d(psl, 3)
 
     atts = {"standard_name": "air_pressure_at_mean_sea_level",
                  "long_name":      "Sea Level Pressure"      ,
@@ -250,13 +251,12 @@ def compute_WA(filename):
     """ Function to calculate vertical wind W from WRF OUTPUTS
         It also provides variable attributes CF-Standard
     """
-    from wrf import getvar
 
     ncfile = nc.Dataset(filename,'r')
 
     #Get vertical wind using wrf-python
 
-    wa = getvar(ncfile, "wa")
+    wa = wrf.getvar(ncfile, "wa",wrf.ALL_TIMES)
 
     atts = {"standard_name": "vertical_wind_speed",
             "long_name":  "Vertical wind speed",
@@ -270,13 +270,12 @@ def compute_WSFC(filename):
     """ Function to calculate vertical wind W from WRF OUTPUTS at the lowest level
         It also provides variable attributes CF-Standard
     """
-    from wrf import getvar
 
     ncfile = nc.Dataset(filename,'r')
 
     #Get vertical wind using wrf-python
 
-    wa = getvar(ncfile, "wa")
+    wa = wrf.getvar(ncfile, "wa",wrf.ALL_TIMES)
 
     if wa.ndim == 3:
         #No times
@@ -294,45 +293,17 @@ def compute_WSFC(filename):
     return wa,atts
 
 
-def compute_Wl2(filename):
-    """ Function to calculate vertical wind W from WRF OUTPUTS at level 2
-        It also provides variable attributes CF-Standard
-    """
-    from wrf import getvar
-
-    ncfile = nc.Dataset(filename,'r')
-
-    #Get vertical wind using wrf-python
-
-    wa = getvar(ncfile, "wa")
-
-    if wa.ndim == 3:
-        #No times
-        wa = np.squeeze(wa[1,:,:])
-    if wa.ndim == 4:
-        #With times
-        wa = np.squeeze(wa[:,1,:,:])
-
-    atts = {"standard_name": "vertical_wind_speed",
-            "long_name":  "Vertical wind speed",
-            "units"    :  "m s-1"                      ,
-            "hgt"       :  "model level"                    ,
-            }
-
-    return wa,atts
-
 def compute_uvmet10(filename):
     """ Function to calculate 10-m windspeed rotated to Earth coordinates
         from WRF OUTPUTS
         It also provides variable attributes CF-Standard
     """
-    from wrf import getvar
 
     ncfile = nc.Dataset(filename,'r')
 
     #Get vertical wind using wrf-python
 
-    wa = getvar(ncfile, "uvmet10")
+    wa = wrf.getvar(ncfile, "uvmet10",wrf.ALL_TIMES)
 
     atts = {"standard_name": "wind_speed",
             "long_name":  "Earth coordinates wind speed",
@@ -348,22 +319,18 @@ def compute_uvmet10_wdir(filename):
         from WRF OUTPUTS
         It also provides variable attributes CF-Standard
     """
-    from wrf import getvar
 
     ncfile = nc.Dataset(filename,'r')
 
     #Get wind direction (this function calculates both speed and direction)
     # We select direction only
 
-    uvmet10_wind = getvar(ncfile, "uvmet10_wspd_wdir")
+    uvmet10_wind = np.squeeze(wrf.getvar(ncfile, "uvmet10_wspd_wdir",wrf.ALL_TIMES)[1,:])
     atts = {"standard_name": "wind_direction",
             "long_name":  "Earth coordinates wind direction",
             "units"    :  "degrees_north"                      ,
             "hgt"       :  "10 m"                    ,
             }
-    if uvmet10_wind.ndim == 3:
-        #No times
-        uvmet10_wind = np.squeeze(uvmet10_wind[1,:,:])
 
 
     return uvmet10_wind,atts
@@ -373,24 +340,19 @@ def compute_uvmet10_wspd(filename):
         from WRF OUTPUTS
         It also provides variable attributes CF-Standard
     """
-    from wrf import getvar
 
     ncfile = nc.Dataset(filename,'r')
 
     #Get wind speed (this function calculates both speed and direction)
     #We select speed only
 
-    uvmet10_wind = getvar(ncfile, "uvmet10_wspd_wdir")
+    uvmet10_wind = np.squeeze(wrf.getvar(ncfile, "uvmet10_wspd_wdir",wrf.ALL_TIMES)[0,:])
 
     atts = {"standard_name": "wind_speed",
             "long_name":  "Earth coordinates wind speed",
             "units"    :  "m s-1"                      ,
             "hgt"       :  "10 m"                    ,
             }
-    if uvmet10_wind.ndim == 3:
-        #No times
-        uvmet10_wind = np.squeeze(uvmet10_wind[0,:,:])
-
 
     return uvmet10_wind,atts
 
@@ -400,11 +362,11 @@ def compute_cloudfrac(filename):
         It also provides variable attributes CF-Standard
         Method obtained from NCL using pressure levels to determine the 3 categ.
     """
-    from wrf import getvar
+
 
     ncfile = nc.Dataset(filename,'r')
 
-    cloudfrac = getvar(ncfile, "cloudfrac")
+    cloudfrac = wrf.getvar(ncfile, "cloudfrac",wrf.ALL_TIMES)
 
 
     atts = {"standard_name": "cloudfrac",
@@ -424,11 +386,11 @@ def compute_pressure(filename):
         from WRF OUTPUTS.
         It also provides variable attributes CF-Standard
     """
-    from wrf import getvar
+
 
     ncfile = nc.Dataset(filename,'r')
 
-    pressure = getvar(ncfile, "pressure")
+    pressure = wrf.getvar(ncfile, "pressure",wrf.ALL_TIMES)
 
     atts = {"standard_name": "pressure",
             "long_name":  "full_model_level_pressure",
@@ -443,11 +405,11 @@ def compute_height(filename):
         from WRF OUTPUTS.
         It also provides variable attributes CF-Standard
     """
-    from wrf import getvar
+
 
     ncfile = nc.Dataset(filename,'r')
 
-    height = getvar(ncfile, "height")
+    height = wrf.getvar(ncfile, "height",wrf.ALL_TIMES)
 
     atts = {"standard_name": "height",
             "long_name":  "full_model_level_height",
@@ -461,16 +423,16 @@ def compute_TA(filename):
     """ Function to calculate temperature in kelvin from WRF outputs
         It also provides variable attributes CF-Standard
     """
-    from wrf import getvar
+
 
     ncfile = nc.Dataset(filename,'r')
 
-    tk = getvar(ncfile,"tk")
+    tk = wrf.getvar(ncfile,"tk",wrf.ALL_TIMES)
 
     atts = {"standard_name": "Temperature",
             "long_name":  "air_temperature",
-            "units"    :  "K"                      ,
-            "hgt"       :  ""                    ,
+            "units"    :  "K"              ,
+            "hgt"       :  ""              ,
             }
     return tk,atts
 
@@ -478,11 +440,11 @@ def compute_UA(filename):
     """ Function to calculate earth-rotated Eastward wind components in m s-1 from WRF outputs
         It also provides variable attributes CF-Standard
     """
-    from wrf import getvar
+
 
     ncfile = nc.Dataset(filename,'r')
 
-    ua = np.squeeze(getvar(ncfile,"uvmet")[0,:])
+    ua = np.squeeze(getvar(ncfile,"uvmet",wrf.ALL_TIMES)[0,:])
 
     atts = {"standard_name": "eastward_wind",
             "long_name":  "Eastward Wind",
@@ -495,11 +457,11 @@ def compute_VA(filename):
     """ Function to calculate earth-rotated Northward wind components in m s-1 from WRF outputs
         It also provides variable attributes CF-Standard
     """
-    from wrf import getvar
+
 
     ncfile = nc.Dataset(filename,'r')
 
-    va = np.squeeze(getvar(ncfile,"uvmet")[1,:])
+    va = np.squeeze(getvar(ncfile,"uvmet",wrf.ALL_TIMES)[1,:])
 
     atts = {"standard_name": "northward_wind",
             "long_name":  "Northward Wind",
