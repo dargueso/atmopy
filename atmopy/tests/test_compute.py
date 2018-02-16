@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from atmopy import compute_vars,constants,wrf_time
+from atmopy import compute_vars,constants,wrf_utils
 
 class testcomputevars(TestCase):
     def test_compute_PR(self):
@@ -12,5 +12,5 @@ class testcomputevars(TestCase):
         self.assertTrue(earth_radius==6371000)
 
     def test_wrftime2date(self):
-        date = wrf_time.wrftime2date('./atmopy/tests/wrfout_test.nc')[0]
+        date = wrf_utils.wrftime2date('./atmopy/tests/wrfout_test.nc')[0]
         self.assertTrue(date.year==2015)
