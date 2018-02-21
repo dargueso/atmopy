@@ -52,28 +52,28 @@ def rgb2cmap(filename,base='255'):
      Author: Daniel Argueso @ CCRC, UNSW. Sydney (Australia)
   """
 
-from matplotlib.colors import ListedColormap
-import re
+    from matplotlib.colors import ListedColormap
+    import re
 
-  filein=open(filename)
-  lines=filein.readlines()
-  colors=[]
+    filein=open(filename)
+    lines=filein.readlines()
+    colors=[]
 
-  for line in lines[2:]:
-      line=re.sub('\s+',' ',line)
-      li=line.strip()
-      if li:
-          values=li.split(' ')
-          if base == '255':
-            new_values=[i/255. for i in map(int,values[:3])]
-          else:
-            new_values=[i for i in map(float,values[:3])]
-          colors.append(new_values)
-  cmap=ListedColormap(colors)
-  cmap.set_over(colors[-1])
-  cmap.set_under(colors[0])
+    for line in lines[2:]:
+        line=re.sub('\s+',' ',line)
+        li=line.strip()
+        if li:
+            values=li.split(' ')
+            if base == '255':
+              new_values=[i/255. for i in map(int,values[:3])]
+            else:
+              new_values=[i for i in map(float,values[:3])]
+            colors.append(new_values)
+    cmap=ListedColormap(colors)
+    cmap.set_over(colors[-1])
+    cmap.set_under(colors[0])
 
-  return cmap
+    return cmap
 
 ###########################################################
 ###########################################################
