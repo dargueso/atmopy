@@ -47,10 +47,10 @@ def read_pkl(filename):
 ###########################################################
 
 def rgb2cmap(filename,base='255'):
-  """Function to read a rgb file (i.e. NCL colortables) and convert it
+    """Function to read a rgb file (i.e. NCL colortables) and convert it
      to matplotlib colormap
      Author: Daniel Argueso @ CCRC, UNSW. Sydney (Australia)
-  """
+    """
 
     from matplotlib.colors import ListedColormap
     import re
