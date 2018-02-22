@@ -478,7 +478,7 @@ def compute_tc(filename):
 
     ncfile = nc.Dataset(filename,'r')
 
-    tc = np.squeeze( wrf.getvar(ncfile,"tc",wrf.ALL_TIMES)[1,:])
+    tc =  wrf.getvar(ncfile,"tc",wrf.ALL_TIMES)
 
     atts = {"standard_name": "air_temperature",
             "long_name":  "Air temperature",
@@ -495,7 +495,7 @@ def compute_td(filename):
 
     ncfile = nc.Dataset(filename,'r')
 
-    td = np.squeeze( wrf.getvar(ncfile,"td",wrf.ALL_TIMES)[1,:])
+    td = wrf.getvar(ncfile,"td",wrf.ALL_TIMES)
 
     atts = {"standard_name": "air_dewpoint_temperature",
             "long_name":  "Air Dewpoint temperature",
@@ -513,7 +513,7 @@ def compute_rh(filename):
 
     ncfile = nc.Dataset(filename,'r')
 
-    rh = np.squeeze( wrf.getvar(ncfile,"rh",wrf.ALL_TIMES)[1,:])
+    rh = wrf.getvar(ncfile,"rh",wrf.ALL_TIMES)
 
     atts = {"standard_name": "relative_humidity",
             "long_name":  "Relative Humidity",
