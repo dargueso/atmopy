@@ -469,3 +469,37 @@ def compute_VA(filename):
             "hgt"       :  ""                    ,
             }
     return va,atts
+
+def compute_tc(filename):
+    """ Function to calculate temperature in degC at modell full level from WRF outputs
+        It also provides variable attributes CF-Standard
+    """
+
+
+    ncfile = nc.Dataset(filename,'r')
+
+    tc = np.squeeze( wrf.getvar(ncfile,"tc",wrf.ALL_TIMES)[1,:])
+
+    atts = {"standard_name": "air_temperature",
+            "long_name":  "Air temperature",
+            "units"    :  "degC"                      ,
+            "hgt"       :  "full_model_level"                    ,
+            }
+    return tc,atts
+
+def compute_td(filename):
+    """ Function to calculate dewpoint temperature in degC at modell full level from WRF outputs
+        It also provides variable attributes CF-Standard
+    """
+
+
+    ncfile = nc.Dataset(filename,'r')
+
+    td = np.squeeze( wrf.getvar(ncfile,"td",wrf.ALL_TIMES)[1,:])
+
+    atts = {"standard_name": "air_dewpoint_temperature",
+            "long_name":  "Air Dewpoint temperature",
+            "units"    :  "degC"                      ,
+            "hgt"       :  "full_model_level"                    ,
+            }
+    return td,atts
