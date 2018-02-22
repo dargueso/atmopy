@@ -471,7 +471,7 @@ def compute_VA(filename):
     return va,atts
 
 def compute_tc(filename):
-    """ Function to calculate temperature in degC at modell full level from WRF outputs
+    """ Function to calculate temperature in degC at model full levels from WRF outputs
         It also provides variable attributes CF-Standard
     """
 
@@ -488,7 +488,7 @@ def compute_tc(filename):
     return tc,atts
 
 def compute_td(filename):
-    """ Function to calculate dewpoint temperature in degC at modell full level from WRF outputs
+    """ Function to calculate dewpoint temperature in degC at model full levels from WRF outputs
         It also provides variable attributes CF-Standard
     """
 
@@ -503,3 +503,21 @@ def compute_td(filename):
             "hgt"       :  "full_model_level"                    ,
             }
     return td,atts
+
+
+def compute_rh(filename):
+    """ Function to calculate relative humidity at model full levels from WRF outputs
+        It also provides variable attributes CF-Standard
+    """
+
+
+    ncfile = nc.Dataset(filename,'r')
+
+    rh = np.squeeze( wrf.getvar(ncfile,"rh",wrf.ALL_TIMES)[1,:])
+
+    atts = {"standard_name": "relative_humidity",
+            "long_name":  "Relative Humidity",
+            "units"    :  "%"                      ,
+            "hgt"       :  "full_model_level"                    ,
+            }
+    return rh,atts
