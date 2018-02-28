@@ -1,30 +1,6 @@
 #!/usr/bin/env python
 """ Get_WRFvar Program that gets a variable from a list of wrfout and create a netcdf
 
-Usage:
-    get_wrfvar.py [-s SM] [-e EM] [-x WRUN] [-i HOST] [-p PATT] [-d DOM] VARNAME SY EY PATHIN PATHOUT
-    get_wrfvar.py (-h | --help)
-    get_wrfvar.py --version
-
-Arguments:
-    VARNAME     Requested variable name
-    SY          First year to process
-    EY          Last year to process
-    PATHIN      Directory with input files
-    PATHOUT     Directory to write out files
-
-
-Options:
-    -h --help               Show this screen
-    --version               Show versions
-    -s SM --smonth=SM       Optional first month    [default: 1].
-    -e EM --emonth=EM       Optional last month     [default: 12].
-    -x WRUN --exp=WRUN      Optional experiment named   [default: WRF_TEST].
-    -i HOST --inst=HOST     Optional institution name for output info   [default: WRF].
-    -p PATT --pattern=PATT  Optional starting pattern for wrfout [default: wrfout].
-    -d DOM --domain=DOM    Optional domain to process [default: d01].
-
-
 """
 
 
@@ -35,43 +11,93 @@ import datetime as dt
 import calendar
 import os
 import atmopy as ap
-from docopt import docopt
+from optparse import OptionParser
+import re
 
 import atmopy.compute_vars as cvars
 from atmopy.wrf_utils import wrftime2date,sel_wrfout_files
 
 
-if __name__ == '__main__':
-    args = docopt(__doc__, version='Get_WRFvar 1.0')
+def read_input(filename):
+    """
+    Read input file with input arguments:
 
-    print (args)
+    wrun: Simulation ID - used in output path and naming
+    institution: Insititution - used in output files
+    path_in: path to input wrf files
+    path_out: path to output postprocessed files
+
+    patt: pattern of input files - generally wrfout or wrfhrly
+
+    syear: First year to postprocess (e.g. 1990)
+    eyear: Last year to postprocess (e.g. 2009)
+    smonth: First month to postprocess (e.g. 1)
+    emonth: Last month to postprocess (e.g. 12)
+
+    varname: Variable to postprocess (e.g. PR)
+
+    dom: domain to postprocess (e.g. 'd04')
+
+    acc_dt: accumuluated period for variables such as precipitation (in minutes)
+    """
+
+    filein=open(filename,'r')
+    lines=filein.readlines()
+
+    inputinfs={}
+    entryname=[]
+    entryvalue=[]
+    for line in lines:
+      line=re.sub('\s+',' ',line)
+      line=line.replace(" ", "")
+      li=line.strip()
+      #Ignore empty lines
+      if li:
+        #Ignore commented lines
+        if not li.startswith("#"):
+          values=li.split('=')
+          entryname.append(values[0])
+          entryvalue.append(values[1])
+    filein.close()
+
+    for ii in xrange(len(entryname)):
+      inputinfs[entryname[ii]]=entryvalue[ii]
+
+    return inputinfs
+
+
+
+
+#### READING INPUT FILE ######
+### Options
+
+parser = OptionParser()
+
+parser.add_option("-i", "--infile", dest="infile",
+help="file with the input arguments", metavar="INPUTFILE")
+(opts, args) = parser.parse_args()
+
+###
+
+
+#### Reading input info file ######
+inputinfs=read_input(opts.infile)
 
 
 ###########################################################
-############# USER MODIF ##################################
+###########################################################
 
-wrun = args['--exp']
-
-institution=args['--inst']
-
-#path_in = "/home/dargueso/WRF_OUT/REHIPRE/%s/out" %(wrun)# Location of WRF output files
-#path_out = "/home/dargueso/postprocessed/REHIPRE/%s/" %(wrun)#
-
-path_in = args['PATHIN']
-path_out = args['PATHOUT']
-
-patt    = args['--pattern']                # Pattern of WRF output files
-
-
-
-syear = int(args['SY'])
-eyear = int(args['EY'])
-smonth = int(args['--smonth'])
-emonth = int(args['--emonth'])
-
-varname = args['VARNAME']
-
-dom = args['--domain']
+wrun = inputinfs['wrun']
+institution=inputinfs['institution']
+path_in = inputinfs['path_in']
+path_out = inputinfs['path_out']
+patt    = inputinfs['patt']
+syear = int(inputinfs['syear'])
+eyear = int(inputinfs['eyear'])
+smonth = int(inputinfs['smonth'])
+emonth = int(inputinfs['emonth'])
+varname = inputinfs['varname']
+dom = inputinfs['dom']
 
 ###########################################################
 ###########################################################
@@ -87,13 +113,11 @@ if not glob('%s/%s_%s*' %(path_in,patt,dom)):
 while (y < eyear or (y == eyear and m <= emonth)):
     print y, m, d
 
-    #print "Extracting variables for day %s-%s-%s" %(y,str(m).rjust(2,"0"),str(d).rjust(2,"0"))
-
     if not glob('%s/%s_%s_%s*' %(path_in,patt,dom,y)):
-        raise Exception("ERROR: no available files for year %s requested directory: %s/%s_%s_%s*" %(y,path_in,patt,dom,y))
+        raise Exception("ERROR: no available files for year %s requested directory: %s/%s_%s_%s-%s*" %(y,path_in,patt,dom,y,m))
 
 
-    sdate="%s-%s-%s" %(y,str(m).rjust(2,"0"),str(d).rjust(2,"0"))
+    sdate="%s-%s" %(y,str(m).rjust(2,"0"))
 
 
     filesin = sorted(glob('%s/%s_%s_%s*' %(path_in,patt,dom,sdate)))
@@ -101,29 +125,37 @@ while (y < eyear or (y == eyear and m <= emonth)):
 
 
     if not filesin:
-        print "No available files for day %s" %(sdate)
+        print "No available files for month %s" %(sdate)
         continue
 
     x=[]
     t=[]
 
-    for n,filename in enumerate(filesin):
-        print filename
-        #print "Processing file %s of %s..." %(n, len(filesin))
+    if len(filesin) == 1:
+        print filesin
+        varout = cvars.compute_WRFvar(filesin[0],varname,inputinfs)
+        otimes =  wrftime2date(filesin[0].split())[:]
 
-        xFragment,atts = cvars.compute_WRFvar(filename,varname)
-        if len(xFragment.shape) == 3:
-            xFragment=np.expand_dims(xFragment,axis=0)
-        if len(xFragment.shape) == 2:
-            xFragment=np.expand_dims(xFragment,axis=0)
-        tFragment = wrftime2date(filename.split())[:]
+    else:
 
-        x.append(xFragment)
-        t.append(tFragment)
+        for n,filename in enumerate(filesin):
+            print filename
+
+            tFragment = wrftime2date(filename.split())[:]
+            xFragment,atts = cvars.compute_WRFvar(filename,varname,inputinfs)
+
+            if len(tFragment)==1:
+                if len(xFragment.shape) == 3:
+                    xFragment=np.expand_dims(xFragment,axis=0)
+                if len(xFragment.shape) == 2:
+                    xFragment=np.expand_dims(xFragment,axis=0)
 
 
-    varout = np.concatenate(x, axis=0)
-    otimes = np.concatenate(t, axis=0)
+            x.append(xFragment)
+            t.append(tFragment)
+
+        varout = np.concatenate(x, axis=0)
+        otimes = np.concatenate(t, axis=0)
 
 
 
@@ -146,7 +178,10 @@ while (y < eyear or (y == eyear and m <= emonth)):
 
     cvars.create_netcdf(varinfo,fileout)
 
-    edate = dt.datetime(y,m,d) + dt.timedelta(days=1)
+
+    #edate = dt.datetime(y,m,d) + dt.timedelta(days=1)
+    print otimes[-1].strftime("%Y-%m-%d")
+    edate = otimes[-1] + dt.timedelta(days=1)
 
     y = edate.year
     m = edate.month

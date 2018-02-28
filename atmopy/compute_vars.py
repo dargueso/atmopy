@@ -24,7 +24,7 @@ import datetime as dt
 import wrf as wrf
 
 
-def compute_WRFvar (filename,varname):
+def compute_WRFvar (filename,varname,inputinf=None):
     """ Function to compute a variable name from wrf outputs
         filename: wrfout (or other file name used as input)
         varname : variable to be extracted or computed from WRF outputs
@@ -48,7 +48,7 @@ def compute_WRFvar (filename,varname):
         possibles.update(locals())
         compute=possibles.get(method_name)
 
-        varval, varatt=compute(filename)
+        varval, varatt=compute(filename,inputinf)
 
     ncfile.close()
 
@@ -73,21 +73,21 @@ def create_netcdf(var,filename):
         outfile.createDimension('x',var['values'].shape[3])
         outfile.createDimension('lev',var['values'].shape[1])
 
-        outvar  = outfile.createVariable(var['varname'],'f8',('time','lev','y','x'),fill_value=1e20)
+        outvar  = outfile.createVariable(var['varname'],'f',('time','lev','y','x'),fill_value=1e20)
 
     if var['values'].ndim == 3:
         outfile.createDimension('y',var['values'].shape[1])
         outfile.createDimension('x',var['values'].shape[2])
 
-        outvar  = outfile.createVariable(var['varname'],'f8',('time','y','x'),fill_value=1e20)
+        outvar  = outfile.createVariable(var['varname'],'f',('time','y','x'),fill_value=1e20)
 
     outtime = outfile.createVariable('time','f8','time',fill_value=1e20)
     outtime_bnds = outfile.createVariable('time_bnds','f8',('time','bnds'),fill_value=1e20)
-    outlat  = outfile.createVariable('lat','f8',('y','x'),fill_value=1e20)
-    outlon  = outfile.createVariable('lon','f8',('y','x'),fill_value=1e20)
+    outlat  = outfile.createVariable('lat','f',('y','x'),fill_value=1e20)
+    outlon  = outfile.createVariable('lon','f',('y','x'),fill_value=1e20)
 
     if var['values'].ndim == 4:
-        outlev = outfile.createVariable('levels','f8',('lev'),fill_value=1e20)
+        outlev = outfile.createVariable('levels','f',('lev'),fill_value=1e20)
         if var['varname']=='cloudfrac':
             setattr(outlev,"standard_name","cloud-level")
             setattr(outlev,"long_name","Clouds level")
@@ -147,7 +147,7 @@ def create_netcdf(var,filename):
 ###########################################################
 ###########################################################
 
-def compute_PR(filename):
+def compute_PR(filename, inputinf=None):
     """Function to calculate precipitation flux from a wrf output
        It also provides variable attribute CF-Standard
     """
@@ -157,7 +157,11 @@ def compute_PR(filename):
     ncfile = nc.Dataset(filename,'r')
 
     ## Specific to PR
-    accum_dt = getattr(ncfile,'PREC_ACC_DT')
+    if hasattr(ncfile,'PREC_ACC_DT'):
+        accum_dt = getattr(ncfile,'PREC_ACC_DT')
+    else:
+        print "NO PREC_ACC_DT in input file. Set to default %s min" %(inputinf['acc_dt'])
+        accum_dt = int(inputinf['acc_dt'][:])
 
     ## Extracting variables required for diagnostic
     for var in wrfvames:
@@ -179,7 +183,7 @@ def compute_PR(filename):
 
     return pr,atts
 
-def compute_PRACC(filename):
+def compute_PRACC(filename,inputinf=None):
     """Function to calculate precipitation flux from a wrf output
        It also provides variable attribute CF-Standard
     """
@@ -203,7 +207,7 @@ def compute_PRACC(filename):
 
     return pracc,atts
 
-def compute_TAS(filename):
+def compute_TAS(filename,inputinf=None):
     """ Function to calculate 2-m temperature from WRF OUTPUTS
         It also provides variable attributes CF-Standard
     """
@@ -220,9 +224,26 @@ def compute_TAS(filename):
 
     return t2,atts
 
+def compute_TD2(filename,inputinf=None):
+    """ Function to calculate 2-m dewpoint temperature from WRF OUTPUTS
+        It also provides variable attributes CF-Standard
+    """
+
+    ncfile = nc.Dataset(filename,'r')
+
+    td2 = wrf.getvar(ncfile, "td2",wrf.ALL_TIMES,units='K')
+
+    atts = {"standard_name": "air_dewpoint_temperature",
+            "long_name":  "Surface air dewpoint temperature",
+            "units"    :  "K"                      ,
+            "hgt"       :  "2 m"                    ,
+            }
+
+    return td2,atts
 
 
-def compute_PSL(filename):
+
+def compute_PSL(filename,inputinf=None):
     """ Function to calculate PSL using wrf-python diagnostics
         It also provides variable attribute CF-Standard
         Note: this function was also coded manually for in compute_vars.py
@@ -247,7 +268,7 @@ def compute_PSL(filename):
     return smooth_psl,atts
 
 
-def compute_WA(filename):
+def compute_WA(filename,inputinf=None):
     """ Function to calculate vertical wind W from WRF OUTPUTS
         It also provides variable attributes CF-Standard
     """
@@ -266,7 +287,7 @@ def compute_WA(filename):
 
     return wa,atts
 
-def compute_WSFC(filename):
+def compute_WSFC(filename,inputinf=None):
     """ Function to calculate vertical wind W from WRF OUTPUTS at the lowest level
         It also provides variable attributes CF-Standard
     """
@@ -293,7 +314,7 @@ def compute_WSFC(filename):
     return wa,atts
 
 
-def compute_uvmet10(filename):
+def compute_uvmet10(filename,inputinf=None):
     """ Function to calculate 10-m windspeed rotated to Earth coordinates
         from WRF OUTPUTS
         It also provides variable attributes CF-Standard
@@ -314,7 +335,7 @@ def compute_uvmet10(filename):
     return wa,atts
 
 
-def compute_WDIR10(filename):
+def compute_WDIR10(filename,inputinf=None):
     """ Function to calculate 10-m wind direction on Earth coordinates
         from WRF OUTPUTS
         It also provides variable attributes CF-Standard
@@ -335,7 +356,7 @@ def compute_WDIR10(filename):
 
     return uvmet10_wind,atts
 
-def compute_WSPD10(filename):
+def compute_WSPD10(filename,inputinf=None):
     """ Function to calculate 10-m wind speed on Earth coordinates
         from WRF OUTPUTS
         It also provides variable attributes CF-Standard
@@ -356,7 +377,7 @@ def compute_WSPD10(filename):
 
     return uvmet10_wind,atts
 
-def compute_cloudfrac(filename):
+def compute_cloudfrac(filename,inputinf=None):
     """ Function to calculate low med and high-leve cloud fraction
         from WRF OUTPUTS
         It also provides variable attributes CF-Standard
@@ -381,7 +402,7 @@ def compute_cloudfrac(filename):
 
     return cloudfrac, atts
 
-def compute_pressure(filename):
+def compute_pressure(filename,inputinf=None):
     """ Function to calculate pressure at Full model levels in hPa
         from WRF OUTPUTS.
         It also provides variable attributes CF-Standard
@@ -400,7 +421,7 @@ def compute_pressure(filename):
 
     return pressure, atts
 
-def compute_height(filename):
+def compute_height(filename, inputinf=None):
     """ Function to calculate height at Full model levels in m
         from WRF OUTPUTS.
         It also provides variable attributes CF-Standard
@@ -419,7 +440,7 @@ def compute_height(filename):
 
     return height, atts
 
-def compute_TA(filename):
+def compute_TA(filename, inputinf=None):
     """ Function to calculate temperature in kelvin from WRF outputs
         It also provides variable attributes CF-Standard
     """
@@ -436,7 +457,7 @@ def compute_TA(filename):
             }
     return tk,atts
 
-def compute_UA(filename):
+def compute_UA(filename, inputinf=None):
     """ Function to calculate earth-rotated Eastward wind components in m s-1 from WRF outputs
         It also provides variable attributes CF-Standard
     """
@@ -453,7 +474,7 @@ def compute_UA(filename):
             }
     return ua,atts
 
-def compute_VA(filename):
+def compute_VA(filename, inputinf=None):
     """ Function to calculate earth-rotated Northward wind components in m s-1 from WRF outputs
         It also provides variable attributes CF-Standard
     """
@@ -470,7 +491,7 @@ def compute_VA(filename):
             }
     return va,atts
 
-def compute_tc(filename):
+def compute_tc(filename, inputinf=None):
     """ Function to calculate temperature in degC at model full levels from WRF outputs
         It also provides variable attributes CF-Standard
     """
@@ -487,7 +508,7 @@ def compute_tc(filename):
             }
     return tc,atts
 
-def compute_td(filename):
+def compute_td(filename, inputinf=None):
     """ Function to calculate dewpoint temperature in degC at model full levels from WRF outputs
         It also provides variable attributes CF-Standard
     """
@@ -505,7 +526,7 @@ def compute_td(filename):
     return td,atts
 
 
-def compute_rh(filename):
+def compute_rh(filename, inputinf=None):
     """ Function to calculate relative humidity at model full levels from WRF outputs
         It also provides variable attributes CF-Standard
     """

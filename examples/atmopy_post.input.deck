@@ -1,0 +1,19 @@
+#File with atmopy postprocessing input arguments (get_wrfvar)
+
+wrun = %wrun%
+institution = %inst%
+path_in = %pathin%
+path_out = %pathout%
+
+patt    = %patt%
+
+syear = %syear%
+eyear = %eyear%
+smonth = %smonth%
+emonth = %emonth%
+
+varname = %varname%
+
+dom = %domain%
+
+acc_dt = %acc_dt%
