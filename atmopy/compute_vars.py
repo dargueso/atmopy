@@ -224,6 +224,24 @@ def compute_TAS(filename,inputinf=None):
 
     return t2,atts
 
+def compute_TD2(filename,inputinf=None):
+    """ Function to calculate 2-m dewpoint temperature from WRF OUTPUTS
+        It also provides variable attributes CF-Standard
+    """
+
+    ncfile = nc.Dataset(filename,'r')
+
+    td2 = wrf.getvar(ncfile, "td2",wrf.ALL_TIMES,units='K')
+
+    atts = {"standard_name": "air_dewpoint_temperature",
+            "long_name":  "Surface air dewpoint temperature",
+            "units"    :  "K"                      ,
+            "hgt"       :  "2 m"                    ,
+            }
+
+    return td2,atts
+
+
 
 
 def compute_PSL(filename,inputinf=None):
