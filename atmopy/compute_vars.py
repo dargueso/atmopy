@@ -160,8 +160,8 @@ def compute_PR(filename, inputinf=None):
     if hasattr(ncfile,'PREC_ACC_DT'):
         accum_dt = getattr(ncfile,'PREC_ACC_DT')
     else:
-        print "NO PREC_ACC_DT in input file. Set to default 60. min"
-        accum_dt = int(inputinf['acc_dt'])
+        print "NO PREC_ACC_DT in input file. Set to default %s min" %(inputinf['acc_dt'])
+        accum_dt = int(inputinf['acc_dt'][:])
 
     ## Extracting variables required for diagnostic
     for var in wrfvames:
