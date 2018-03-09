@@ -48,7 +48,7 @@ def compute_WRFvar (filename,varname,inputinf=None):
         possibles.update(locals())
         compute=possibles.get(method_name)
 
-        varval, varatt=compute(filename,inputinf)
+        varval, varatt=compute(filename,inputinf=None)
 
     ncfile.close()
 
@@ -160,8 +160,8 @@ def compute_PR(filename, inputinf=None):
     if hasattr(ncfile,'PREC_ACC_DT'):
         accum_dt = getattr(ncfile,'PREC_ACC_DT')
     else:
-        print "NO PREC_ACC_DT in input file. Set to default %s min" %(inputinf['acc_dt'])
-        accum_dt = int(inputinf['acc_dt'][:])
+        print "NO PREC_ACC_DT in input file. Set to default 60. min"
+        accum_dt = int(inputinf['acc_dt'])
 
     ## Extracting variables required for diagnostic
     for var in wrfvames:
@@ -223,23 +223,6 @@ def compute_TAS(filename,inputinf=None):
             }
 
     return t2,atts
-
-def compute_TD2(filename,inputinf=None):
-    """ Function to calculate 2-m dewpoint temperature from WRF OUTPUTS
-        It also provides variable attributes CF-Standard
-    """
-
-    ncfile = nc.Dataset(filename,'r')
-
-    td2 = wrf.getvar(ncfile, "td2",wrf.ALL_TIMES,units='K')
-
-    atts = {"standard_name": "air_dewpoint_temperature",
-            "long_name":  "Surface air dewpoint temperature",
-            "units"    :  "K"                      ,
-            "hgt"       :  "2 m"                    ,
-            }
-
-    return td2,atts
 
 
 
