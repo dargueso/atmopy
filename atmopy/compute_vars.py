@@ -22,6 +22,7 @@ import netCDF4 as nc
 import numpy as np
 import datetime as dt
 import wrf as wrf
+from atmopy.constants import const as const
 
 
 def compute_WRFvar (filename,varname,inputinf=None):
@@ -63,7 +64,7 @@ def create_netcdf(var,filename):
     print('\n Create output file %s') %(filename)
 
     otimes = var['times']
-    outfile = nc.Dataset(filename,'w',format='NETCDF3_CLASSIC')
+    outfile = nc.Dataset(filename,'w',format='NETCDF4_CLASSIC',zlib=True, complevel=5)
 
     outfile.createDimension('time',None)
     outfile.createDimension('bnds',2)
@@ -182,6 +183,37 @@ def compute_PR(filename, inputinf=None):
     ncfile.close()
 
     return pr,atts
+
+def compute_PRNC(filename, inputinf=None):
+    """Function to calculate non-convective precipitation flux from a wrf output
+       It also provides variable attribute CF-Standard
+    """
+
+    ncfile = nc.Dataset(filename,'r')
+
+    ## Specific to PR
+    if hasattr(ncfile,'PREC_ACC_DT'):
+        accum_dt = getattr(ncfile,'PREC_ACC_DT')
+    else:
+        print "NO PREC_ACC_DT in input file. Set to default %s min" %(inputinf['acc_dt'])
+        accum_dt = int(inputinf['acc_dt'][:])
+
+
+    ## Computing diagnostic
+    prnc_acc = ncfile.variables['PREC_ACC_NC'][:]
+
+    ## Deacumulating over prac_acc_dt (namelist entry)
+    prnc = prnc_acc/(accum_dt*60.)
+
+
+
+    atts = {"standard_name": "non_convective_precipitation_flux",
+                    "long_name"    : "non-convective total precipitation flux",
+                    "units"        : "kg m-2 s-1"}
+
+    ncfile.close()
+
+    return prnc,atts
 
 def compute_PRACC(filename,inputinf=None):
     """Function to calculate precipitation flux from a wrf output
@@ -378,7 +410,7 @@ def compute_WSPD10(filename,inputinf=None):
 
     return uvmet10_wind,atts
 
-def compute_cloudfrac(filename,inputinf=None):
+def compute_CLOUDFRAC(filename,inputinf=None):
     """ Function to calculate low med and high-leve cloud fraction
         from WRF OUTPUTS
         It also provides variable attributes CF-Standard
@@ -403,7 +435,7 @@ def compute_cloudfrac(filename,inputinf=None):
 
     return cloudfrac, atts
 
-def compute_pressure(filename,inputinf=None):
+def compute_P(filename,inputinf=None):
     """ Function to calculate pressure at Full model levels in hPa
         from WRF OUTPUTS.
         It also provides variable attributes CF-Standard
@@ -422,7 +454,7 @@ def compute_pressure(filename,inputinf=None):
 
     return pressure, atts
 
-def compute_height(filename, inputinf=None):
+def compute_Z(filename, inputinf=None):
     """ Function to calculate height at Full model levels in m
         from WRF OUTPUTS.
         It also provides variable attributes CF-Standard
@@ -492,7 +524,7 @@ def compute_VA(filename, inputinf=None):
             }
     return va,atts
 
-def compute_tc(filename, inputinf=None):
+def compute_TC(filename, inputinf=None):
     """ Function to calculate temperature in degC at model full levels from WRF outputs
         It also provides variable attributes CF-Standard
     """
@@ -509,7 +541,7 @@ def compute_tc(filename, inputinf=None):
             }
     return tc,atts
 
-def compute_td(filename, inputinf=None):
+def compute_TD(filename, inputinf=None):
     """ Function to calculate dewpoint temperature in degC at model full levels from WRF outputs
         It also provides variable attributes CF-Standard
     """
@@ -527,7 +559,7 @@ def compute_td(filename, inputinf=None):
     return td,atts
 
 
-def compute_rh(filename, inputinf=None):
+def compute_RH(filename, inputinf=None):
     """ Function to calculate relative humidity at model full levels from WRF outputs
         It also provides variable attributes CF-Standard
     """
@@ -543,3 +575,76 @@ def compute_rh(filename, inputinf=None):
             "hgt"       :  "full_model_level"                    ,
             }
     return rh,atts
+
+def compute_SPECHUM(filename, inputinf=None):
+    """ Function to calculate sepcific humidity at model full levels from WRF outputs
+        It also provides variable attributes CF-Standard
+    """
+
+
+    ncfile = nc.Dataset(filename,'r')
+
+    qvapor = ncfile.variables['QVAPOR'][:]
+
+    sh = qvapor/(1+qvapor)
+
+    atts = {"standard_name": "specific_humidity",
+            "long_name":  "Selative Humidity",
+            "units"    :  "kg kg-1"                      ,
+            "hgt"       :  "full_model_level"                    ,
+            }
+
+    return sh,atts
+
+def compute_HUSS(filename, inputinf=None):
+    """ Function to calculate specific humidity near surface from WRF outputs
+        It also provides variable attributes CF-Standard
+    """
+
+    ncfile = nc.Dataset(filename,'r')
+
+    q2 = ncfile.variables['Q2'][:]
+
+    huss = q2/(1+q2)
+
+    atts = {"standard_name": "specific_humidity",
+            "long_name":  "Surface specific humidity",
+            "units"    :  "kg/kg"                      ,
+            "hgt"       :  "2 m"                    ,
+            }
+
+    return huss,atts
+
+def compute_SST(filename, inputinf=None):
+    """ Function to calculate sea surface temperature from WRF outputs
+        It also provides variable attributes CF-Standard
+    """
+    ncfile = nc.Dataset(filename,'r')
+
+    sst = ncfile.variables['SST'][:]
+    landmask = ncfile.variables['LANDMASK'][:]
+
+    atts = {"standard_name": "sea_surface_temperature",
+            "long_name":  "Sea surface temperature",
+            "units"    :  "K"                      ,
+            "_FillValue": const.missingval,
+            }
+
+    sst[mask==1]=1e20
+
+    return sst,atts
+
+def compute_OLR(filename, inputinf=None):
+    """ Function to calculate Outgoing longwave radiation from WRF outputs
+        It also provides variable attributes CF-Standard
+    """
+
+    ncfile = nc.Dataset(filename,'r')
+    olr = ncfile.variables['OLR'][:]
+
+    atts = {"standard_name": "outgoing_longwave_radiation",
+            "long_name":  "Top-of-atmosphere outgoing longwave radiation",
+            "units"    :  "W m-2"                      ,
+            }
+
+    return olr,atts
