@@ -49,7 +49,7 @@ def compute_WRFvar (filename,varname,inputinf=None):
         possibles.update(locals())
         compute=possibles.get(method_name)
 
-        varval, varatt=compute(filename,inputinf=None)
+        varval, varatt=compute(filename)
 
     ncfile.close()
 
