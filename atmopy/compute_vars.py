@@ -648,3 +648,18 @@ def compute_OLR(filename, inputinf=None):
             }
 
     return olr,atts
+
+def compute_SFCEVP(filename, inputinf=None):
+    """ Function to calculate surface evaporation (accumulated) from WRF outputs
+        It also provides variable attributes CF-Standard
+    """
+
+    ncfile = nc.Dataset(filename,'r')
+    sfcevp = ncfile.variables['SFCEVP'][:]
+
+    atts = {"standard_name": "surface_evaporation",
+            "long_name":  "accumulated_surface_evaporation",
+            "units"    :  "kg m-2"                      ,
+            }
+
+    return sfcevp,atts
