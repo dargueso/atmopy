@@ -655,11 +655,21 @@ def compute_SFCEVP(filename, inputinf=None):
     """
 
     ncfile = nc.Dataset(filename,'r')
-    sfcevp = ncfile.variables['SFCEVP'][:]
+    sfcevp_acc = ncfile.variables['SFCEVP'][:]
+
+    ## Specific to accumulated variables
+    if hasattr(ncfile,'PREC_ACC_DT'):
+        accum_dt = getattr(ncfile,'PREC_ACC_DT')
+    else:
+        print "NO PREC_ACC_DT in input file. Set to default %s min" %(inputinf['acc_dt'])
+        accum_dt = int(inputinf['acc_dt'][:])
+
+    ## Deacumulating over prac_acc_dt (namelist entry)
+    sfcevp = sfcevp_acc/(accum_dt*60.)
 
     atts = {"standard_name": "surface_evaporation",
-            "long_name":  "accumulated_surface_evaporation",
-            "units"    :  "kg m-2"                      ,
+            "long_name":  "surface_evaporation_flux",
+            "units"    :  "kg m-2 s-1"                      ,
             }
 
     return sfcevp,atts
