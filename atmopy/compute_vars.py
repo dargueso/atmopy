@@ -649,13 +649,13 @@ def compute_OLR(filename, inputinf=None):
 
     return olr,atts
 
-def compute_SFCEVP(filename, inputinf=None):
-    """ Function to calculate surface evaporation (accumulated) from WRF outputs
+def compute_ET(filename, inputinf=None):
+    """ Function to calculate surface evapotranspiration flux from WRF outputs
         It also provides variable attributes CF-Standard
     """
 
     ncfile = nc.Dataset(filename,'r')
-    sfcevp_acc = ncfile.variables['SFCEVP'][:]
+    et_acc = ncfile.variables['SFCEVP'][:]
 
     ## Specific to accumulated variables
     if hasattr(ncfile,'PREC_ACC_DT'):
@@ -665,11 +665,11 @@ def compute_SFCEVP(filename, inputinf=None):
         accum_dt = int(inputinf['acc_dt'][:])
 
     ## Deacumulating over prac_acc_dt (namelist entry)
-    sfcevp = sfcevp_acc/(accum_dt*60.)
+    et = et_acc/(accum_dt*60.)
 
     atts = {"standard_name": "surface_evaporation",
             "long_name":  "surface_evaporation_flux",
             "units"    :  "kg m-2 s-1"                      ,
             }
 
-    return sfcevp,atts
+    return et,atts
