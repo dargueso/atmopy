@@ -24,6 +24,8 @@ import datetime as dt
 import wrf as wrf
 from atmopy.constants import const as const
 
+#wrf.set_cache_size(0)
+wrf.disable_xarray()
 
 def compute_WRFvar (filename,varname,inputinf=None):
     """ Function to compute a variable name from wrf outputs
@@ -35,7 +37,7 @@ def compute_WRFvar (filename,varname,inputinf=None):
 
 
 
-    if varname in ncfile.variables.keys():
+    if varname in list(ncfile.variables.keys()):
         varval = ncfile.variables[varname][:]
         varatt={}
         for att in ncfile.variables[varname].ncattrs():
@@ -56,12 +58,35 @@ def compute_WRFvar (filename,varname,inputinf=None):
     return varval,varatt
 
 
+###########################################################
+###########################################################
+
+def compute_div_dx(u,v,dx,dy):
+
+      """Function to calculate wind divergence providing the distance between grid points only
+         u:zonal wind [m s-1]
+         v:meridional wind [m s-1]
+         dx: distance between gridpoints longitudinal [m]
+         dy: distance between gridpoints latitudinal [m]
+         ---
+         dv: divergence [s-1]
+
+         Author: Daniel Argueso @ CCRC, UNSW. Sydney (Australia)
+         Created: Mon Mar  9 11:42:51 AEDT 2015 based on compute_div
+
+      """
+
+      dv = np.zeros(u.shape,dtype=np.float64)
+
+      dv[...,1:-1,1:-1] = (u[...,1:-1,2:]-u[...,1:-1,:-2])/(2*dx) + (v[...,2:,1:-1]-v[...,:-2,1:-1])/(2*dy)
+
+      return dv
 
 ###########################################################
 ###########################################################
 
 def create_netcdf(var,filename):
-    print('\n Create output file %s') %(filename)
+    print((('\n Create output file %s') %(filename)))
 
     otimes = var['times']
     outfile = nc.Dataset(filename,'w',format='NETCDF4_CLASSIC',zlib=True, complevel=5)
@@ -74,21 +99,21 @@ def create_netcdf(var,filename):
         outfile.createDimension('x',var['values'].shape[3])
         outfile.createDimension('lev',var['values'].shape[1])
 
-        outvar  = outfile.createVariable(var['varname'],'f',('time','lev','y','x'),fill_value=1e20)
+        outvar  = outfile.createVariable(var['varname'],'f',('time','lev','y','x'),fill_value=const.missingval)
 
     if var['values'].ndim == 3:
         outfile.createDimension('y',var['values'].shape[1])
         outfile.createDimension('x',var['values'].shape[2])
 
-        outvar  = outfile.createVariable(var['varname'],'f',('time','y','x'),fill_value=1e20)
+        outvar  = outfile.createVariable(var['varname'],'f',('time','y','x'),fill_value=const.missingval)
 
-    outtime = outfile.createVariable('time','f8','time',fill_value=1e20)
-    outtime_bnds = outfile.createVariable('time_bnds','f8',('time','bnds'),fill_value=1e20)
-    outlat  = outfile.createVariable('lat','f',('y','x'),fill_value=1e20)
-    outlon  = outfile.createVariable('lon','f',('y','x'),fill_value=1e20)
+    outtime = outfile.createVariable('time','f8','time',fill_value=const.missingval)
+    outtime_bnds = outfile.createVariable('time_bnds','f8',('time','bnds'),fill_value=const.missingval)
+    outlat  = outfile.createVariable('lat','f',('y','x'),fill_value=const.missingval)
+    outlon  = outfile.createVariable('lon','f',('y','x'),fill_value=const.missingval)
 
     if var['values'].ndim == 4:
-        outlev = outfile.createVariable('levels','f',('lev'),fill_value=1e20)
+        outlev = outfile.createVariable('levels','f',('lev'),fill_value=const.missingval)
         if var['varname']=='cloudfrac':
             setattr(outlev,"standard_name","cloud-level")
             setattr(outlev,"long_name","Clouds level")
@@ -135,7 +160,7 @@ def create_netcdf(var,filename):
 
     outvar[:] = var['values'][:]
 
-    for outatt in var['atts'].keys():
+    for outatt in list(var['atts'].keys()):
         setattr(outvar,outatt,var['atts'][outatt])
 
     setattr(outfile,"creation_date",dt.datetime.today().strftime('%Y-%m-%d'))
@@ -161,7 +186,7 @@ def compute_PR(filename, inputinf=None):
     if hasattr(ncfile,'PREC_ACC_DT'):
         accum_dt = getattr(ncfile,'PREC_ACC_DT')
     else:
-        print "NO PREC_ACC_DT in input file. Set to default %s min" %(inputinf['acc_dt'])
+        print(("NO PREC_ACC_DT in input file. Set to default %s min" %(inputinf['acc_dt'])))
         accum_dt = int(inputinf['acc_dt'][:])
 
     ## Extracting variables required for diagnostic
@@ -195,7 +220,7 @@ def compute_PRNC(filename, inputinf=None):
     if hasattr(ncfile,'PREC_ACC_DT'):
         accum_dt = getattr(ncfile,'PREC_ACC_DT')
     else:
-        print "NO PREC_ACC_DT in input file. Set to default %s min" %(inputinf['acc_dt'])
+        print(("NO PREC_ACC_DT in input file. Set to default %s min" %(inputinf['acc_dt'])))
         accum_dt = int(inputinf['acc_dt'][:])
 
 
@@ -254,6 +279,8 @@ def compute_TAS(filename,inputinf=None):
             "hgt"       :  "2 m"                    ,
             }
 
+    ncfile.close()
+
     return t2,atts
 
 def compute_TD2(filename,inputinf=None):
@@ -271,6 +298,7 @@ def compute_TD2(filename,inputinf=None):
             "hgt"       :  "2 m"                    ,
             }
 
+    ncfile.close()
     return td2,atts
 
 
@@ -318,6 +346,7 @@ def compute_WA(filename,inputinf=None):
             "hgt"       :  ""                    ,
             }
 
+    ncfile.close()
     return wa,atts
 
 def compute_WSFC(filename,inputinf=None):
@@ -344,6 +373,7 @@ def compute_WSFC(filename,inputinf=None):
             "hgt"       :  "lowest level"                    ,
             }
 
+    ncfile.close()
     return wa,atts
 
 
@@ -365,6 +395,7 @@ def compute_uvmet10(filename,inputinf=None):
             "hgt"       :  "10 m"                    ,
             }
 
+    ncfile.close()
     return wa,atts
 
 
@@ -386,7 +417,7 @@ def compute_WDIR10(filename,inputinf=None):
             "hgt"       :  "10 m"                    ,
             }
 
-
+    ncfile.close()
     return uvmet10_wind,atts
 
 def compute_WSPD10(filename,inputinf=None):
@@ -408,6 +439,7 @@ def compute_WSPD10(filename,inputinf=None):
             "hgt"       :  "10 m"                    ,
             }
 
+    ncfile.close()
     return uvmet10_wind,atts
 
 def compute_CLOUDFRAC(filename,inputinf=None):
@@ -433,6 +465,7 @@ def compute_CLOUDFRAC(filename,inputinf=None):
 
             }
 
+    ncfile.close()
     return cloudfrac, atts
 
 def compute_P(filename,inputinf=None):
@@ -452,7 +485,28 @@ def compute_P(filename,inputinf=None):
             "hgt"       :  ""                    ,
             }
 
+    ncfile.close()
     return pressure, atts
+
+def compute_GEOPOT(filename,inputinf=None):
+    """ Function to calculate geopotential at Full model levels in m2 s-2
+        from WRF OUTPUTS.
+        It also provides variable attributes CF-Standard
+    """
+
+
+    ncfile = nc.Dataset(filename,'r')
+
+    geopot = wrf.getvar(ncfile, "geopotential",wrf.ALL_TIMES)
+
+    atts = {"standard_name": "geopotential",
+            "long_name":  "full_model_level_geopotential",
+            "units"    :  "m2 s-2"                      ,
+            "hgt"       :  ""                    ,
+            }
+
+    ncfile.close()
+    return geopot, atts
 
 def compute_Z(filename, inputinf=None):
     """ Function to calculate height at Full model levels in m
@@ -471,6 +525,7 @@ def compute_Z(filename, inputinf=None):
             "hgt"       :  ""                    ,
             }
 
+    ncfile.close()
     return height, atts
 
 def compute_TA(filename, inputinf=None):
@@ -488,6 +543,9 @@ def compute_TA(filename, inputinf=None):
             "units"    :  "K"              ,
             "hgt"       :  ""              ,
             }
+
+    ncfile.close()
+
     return tk,atts
 
 def compute_UA(filename, inputinf=None):
@@ -505,6 +563,9 @@ def compute_UA(filename, inputinf=None):
             "units"    :  "m s-1"                      ,
             "hgt"       :  ""                    ,
             }
+
+    ncfile.close()
+
     return ua,atts
 
 def compute_VA(filename, inputinf=None):
@@ -522,6 +583,9 @@ def compute_VA(filename, inputinf=None):
             "units"    :  "m s-1"                      ,
             "hgt"       :  ""                    ,
             }
+
+    ncfile.close()
+
     return va,atts
 
 def compute_TC(filename, inputinf=None):
@@ -539,6 +603,9 @@ def compute_TC(filename, inputinf=None):
             "units"    :  "degC"                      ,
             "hgt"       :  "full_model_level"                    ,
             }
+
+    ncfile.close()
+
     return tc,atts
 
 def compute_TD(filename, inputinf=None):
@@ -556,6 +623,9 @@ def compute_TD(filename, inputinf=None):
             "units"    :  "degC"                      ,
             "hgt"       :  "full_model_level"                    ,
             }
+
+    ncfile.close()
+
     return td,atts
 
 
@@ -574,6 +644,9 @@ def compute_RH(filename, inputinf=None):
             "units"    :  "%"                      ,
             "hgt"       :  "full_model_level"                    ,
             }
+
+    ncfile.close()
+
     return rh,atts
 
 def compute_SPECHUM(filename, inputinf=None):
@@ -594,6 +667,8 @@ def compute_SPECHUM(filename, inputinf=None):
             "hgt"       :  "full_model_level"                    ,
             }
 
+    ncfile.close()
+
     return sh,atts
 
 def compute_HUSS(filename, inputinf=None):
@@ -613,6 +688,8 @@ def compute_HUSS(filename, inputinf=None):
             "hgt"       :  "2 m"                    ,
             }
 
+    ncfile.close()
+
     return huss,atts
 
 def compute_SST(filename, inputinf=None):
@@ -630,7 +707,9 @@ def compute_SST(filename, inputinf=None):
             "_FillValue": const.missingval,
             }
 
-    sst[mask==1]=1e20
+    sst[mask==1]=const.missingval
+
+    ncfile.close()
 
     return sst,atts
 
@@ -647,7 +726,30 @@ def compute_OLR(filename, inputinf=None):
             "units"    :  "W m-2"                      ,
             }
 
+    ncfile.close()
+
     return olr,atts
+
+def compute_PSFC(filename, inputinf=None):
+
+    """ Function to calculate surface pressure from WRF OUTPUTS
+        It also provides variable attributes CF-Standard
+    """
+    ncfile = nc.Dataset(filename,'r')
+
+    psfc = ncfile.variables['PSFC'][:]
+
+    atts = {"standard_name": "surface_pressure",
+            "long_name":  "Surface pressure",
+            "units"    :  "Pa"                      ,
+            "hgt"       :  ""                    ,
+            }
+
+    ncfile.close()
+
+    return psfc,atts
+
+
 
 def compute_ET(filename, inputinf=None):
     """ Function to calculate surface evapotranspiration flux from WRF outputs
@@ -661,15 +763,60 @@ def compute_ET(filename, inputinf=None):
     if hasattr(ncfile,'PREC_ACC_DT'):
         accum_dt = getattr(ncfile,'PREC_ACC_DT')
     else:
-        print "NO PREC_ACC_DT in input file. Set to default %s min" %(inputinf['acc_dt'])
+        print(("NO PREC_ACC_DT in input file. Set to default %s min" %(inputinf['acc_dt'])))
         accum_dt = int(inputinf['acc_dt'][:])
 
     ## Deacumulating over prac_acc_dt (namelist entry)
     et = et_acc/(accum_dt*60.)
 
     atts = {"standard_name": "surface_evaporation",
-            "long_name":  "surface_evaporation_flux",
+            "long_name":  "surface evaporation flux",
             "units"    :  "kg m-2 s-1"                      ,
             }
 
+    ncfile.close()
+
     return et,atts
+
+def compute_CAPE2D(filename,inputinf=None):
+    """ Function to calculate CAPE using methods described in:
+        http://wrf-python.readthedocs.io/en/latest/user_api/generated/wrf.cape_2d.html
+        This is NOT CF-compliant in any way. cape2d contains 4 variables distributed by levels: MCAPE [J kg-1], MCIN[J kg-1], LCL[m] and LFC[m]
+    """
+
+    ncfile = nc.Dataset(filename,'r')
+    pres_hpa = wrf.getvar(ncfile,"pressure",wrf.ALL_TIMES)
+    tkel = wrf.getvar(ncfile,"tk",wrf.ALL_TIMES)
+    qv = wrf.getvar(ncfile,"QVAPOR",wrf.ALL_TIMES)
+    z = wrf.getvar(ncfile,"geopotential",wrf.ALL_TIMES)/const.g
+    psfc = wrf.getvar(ncfile,"PSFC",wrf.ALL_TIMES)/100. #Converto to hPA
+    terrain = wrf.getvar(ncfile,"ter",wrf.ALL_TIMES)
+    ter_follow=True
+
+    cape2d = wrf.cape_2d(pres_hpa, tkel, qv, z, terrain, psfc, ter_follow,missing=const.missingval, meta=False)
+
+    atts = {"standard_name": "cape2d_variables",
+            "long_name":  "mcape mcin lcl lfc",
+            "units"    :  "SI"                ,
+            }
+
+    return cape2d,atts
+
+def compute_Q2DIV(filename,inputinf=None):
+    """ Function to calculate moisture divergence """
+
+    ncfile=nc.Dataset(filename,'r')
+
+    u,v = wrf.getvar(ncfile,"uvmet10",wrf.ALL_TIMES)
+    q2  = wrf.getvar(ncfile,"Q2",wrf.ALL_TIMES)
+    dx = ncfile.DX
+    dy = ncfile.DY
+
+    Q2DIV = compute_div_dx(u*q2,v*q2,dx,dy)
+
+    atts = {"standard_name": "moisture_divergence",
+            "long_name"    : "water mixing ratio divergence",
+            "units"        : "s-1",
+            "hgt"       :  "2m"                    }
+
+    return Q2DIV,atts
