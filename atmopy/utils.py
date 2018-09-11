@@ -20,6 +20,7 @@
 #####################################################################
 """
 import numpy as np
+from atmopy.constants import const as const
 
 ###########################################################
 ###########################################################
@@ -27,13 +28,13 @@ import numpy as np
 # Write out and read using cPickle to make testing efficiently
 
 def write_pkl(var,filename):
-    import cPickle as pkl
+    import pickle as pkl
     handle=open('%s' % filename,'wb')
     pkl.dump(var,handle)
     handle.close
 
 def read_pkl(filename):
-    import cPickle as pkl
+    import pickle as pkl
     handle=open('%s' % filename,'rb')
     var=pkl.load(handle)
     return var
@@ -95,7 +96,7 @@ def setnicescale(minval,maxval,numdivs=15,symmetry=False):
     """
     import numpy as np
 
-    setnum=np.asarray([1.0,1.5,2.0,2.5,4.0,5.0,6.0,8.0,10.0],dtype=np.float)
+    setnum=np.asarray([1.0,1.5,2.0,2.5,3.0,4.0,5.0,6.0,8.0,10.0],dtype=np.float)
     setnum_forstrides=np.asarray([1.0,2.0,2.5,4.0,5.0,10.0],dtype=np.float)
     if maxval==0:
       maxval=0.
@@ -128,7 +129,7 @@ def setnicescale(minval,maxval,numdivs=15,symmetry=False):
 
 
     if symmetry==True:
-      print "symmetrical scale"
+      print ("symmetrical scale")
       bothlim=max(np.abs(minlim),np.abs(maxlim))
       maxlim=bothlim
       minlim=-bothlim
