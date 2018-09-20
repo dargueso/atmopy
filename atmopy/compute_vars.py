@@ -146,8 +146,11 @@ def create_netcdf(var,filename):
     setattr(outtime_bnds,"units","hours since 1949-12-01 00:00:00")
     setattr(outtime_bnds,"calendar","standard")
 
-
-    step_seconds = np.int((otimes[1]-otimes[0]).total_seconds())
+    if len(otimes)==1:
+        ## HARD CODED AT 1-HOUR
+        step_seconds=3600.
+    else:
+        step_seconds = np.int((otimes[1]-otimes[0]).total_seconds())
 
     outtime[:] = nc.date2num([otimes[x] for x in range(len(otimes))],units='hours since 1949-12-01 00:00:00',calendar='standard')
 

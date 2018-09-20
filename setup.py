@@ -5,7 +5,7 @@ def readme():
         return f.read()
 
 setup(name='atmopy',
-      version='1.2.3',
+      version='1.2.4',
       description='Package to plot and process atmospheric data',
       url='https://dargueso@bitbucket.org/dargueso/atmopy.git',
       author='Daniel Argueso',
