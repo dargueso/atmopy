@@ -146,8 +146,8 @@ def create_netcdf(var,filename):
     setattr(outtime_bnds,"units","hours since 1949-12-01 00:00:00")
     setattr(outtime_bnds,"calendar","standard")
 
+
     if len(otimes)==1:
-        ## HARD CODED AT 1-HOUR
         step_seconds=3600.
     else:
         step_seconds = np.int((otimes[1]-otimes[0]).total_seconds())
@@ -847,6 +847,22 @@ def compute_CLDFRA(filename,inputinf=None):
 
     atts = {"standard_name": "Cloud_Fraction",
             "long_name"    : "cloud fraction at mass levels",
-            "units"        : ""}
+            "units"        : "m3 m-3"}
 
     return cldfra,atts
+
+def compute_SMOIS(filename,inputinf=None):
+    """ Function to calculate soil moisture at different levels
+    """
+
+    ncfile = nc.Dataset(filename,'r')
+
+    smois = wrf.getvar(ncfile,'SMOIS',wrf.ALL_TIMES)
+    zs = wrf.getvar(ncfile,'ZS',wrf.ALL_TIMES)
+
+    atts = {'standard_name': "Soil_Moisture",
+            'long_name': "Soil moisture in model soil layers",
+            'units'        : 'm3 m-3',
+            'layers'       : zs}
+
+    return smois,atts

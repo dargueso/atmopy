@@ -700,3 +700,28 @@ def create_diurnalcycle_files_cdo(fullpathout,syear,eyear,smonth,emonth,patt,var
 
         y = edate.year
         m = edate.month
+
+###########################################################
+###########################################################
+
+
+def create_diurnalcycle_files_cdo_hourlyfiles(fullpathout,syear,eyear,smonth,emonth,patt,varn):
+
+    y = syear
+    m = smonth
+
+    while (y < eyear or (y == eyear and m <= emonth)):
+        cwd = os.getcwd()
+        os.chdir(fullpathout)
+        sdate="%s-%s" %(y,str(m).rjust(2,"0"))
+        finpat = "%s_%s_%s.nc" %(patt,varn,sdate)
+        fout = finpat.replace("01H_%s" %(varn),"DCYCLE_%s" %(varn))
+        print(finpat, fout)
+        os.system('cdo ensmean %s_%s_%s*  %s' %(patt,varn,sdate,fout))
+
+        os.chdir(cwd)
+
+        edate = dt.datetime(y,m,1) + relativedelta(months=1)
+
+        y = edate.year
+        m = edate.month

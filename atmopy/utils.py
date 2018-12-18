@@ -160,6 +160,28 @@ def setnicescale(minval,maxval,numdivs=15,symmetry=False):
 
 ###########################################################
 ###########################################################
+def checkpoint(ctime):
+  import time
+
+  """ Computes the spent time from the last checkpoint
+
+  Input: a given time
+  Output: present time
+  Print: the difference between the given time and present time
+  Author: Alejandro Di Luca
+  Created: 07/08/2013
+  Last Modification: 14/08/2013
+
+  """
+  if ctime==0:
+    ctime=time.time()
+    dtime=0
+  else:
+    dtime=time.time()-ctime
+    ctime=time.time()
+    print('======> DONE in ',float('%.2g' %(dtime)),' seconds',"\n")
+  return ctime
+
 
 ###########################################################
 ###########################################################
