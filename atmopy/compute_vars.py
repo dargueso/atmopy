@@ -148,6 +148,7 @@ def create_netcdf(var,filename):
 
 
     if len(otimes)==1:
+        ## HARD CODED AT 1-HOUR
         step_seconds=3600.
     else:
         step_seconds = np.int((otimes[1]-otimes[0]).total_seconds())
