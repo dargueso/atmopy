@@ -158,6 +158,7 @@ def setnicescale(minval,maxval,numdivs=15,symmetry=False):
     #print minlim,maxlim,stride
     return mylevels
 
+
 ###########################################################
 ###########################################################
 def checkpoint(ctime):
@@ -202,3 +203,45 @@ def calc_distance_coord(lat1,lon1,lat2,lon2):
     d = np.arccos(np.sin(lat1r)*np.sin(lat2r) + np.cos(lat1r)*np.cos(lat2r)*np.cos(lon2r-lon1r))*const.earth_radius
 
     return d
+
+    def get_res(s):
+        return int(s.rpartition('km')[0].split('_')[-1])
+
+def is_month(month):
+    if cfg.smonth>cfg.emonth:
+        return (month >= cfg.smonth) | (month <= cfg.emonth)
+    elif cfg.smonth<=cfg.emonth:
+        return  (month >= cfg.smonth) & (month <= cfg.emonth)
+
+def eq_recta(x1,y1,x2,y2):
+
+    a=(y2-y1)/(x2-x1)
+
+    b = y1-a*x1
+
+    return a,b
+
+def get_zb_res():
+    all_res = np.asarray([get_res(wrun) for wrun in cfg.wrf_runs])
+    zb_res = np.int(cfg.zb*np.max(all_res)/int(cfg.ref_res))
+    return zb_res
+
+
+def shift_LST_2D(var,LST_shift):
+
+    """Function to displace hours from UTC (WRF output) to Local Solar time
+       using a 2D array with LST shifts (time, lon).
+       The variable to shift is expected to have (time,lat,lon) dimensions.
+    """
+
+    this_shift=LST_shift[0]
+    var = np.roll(var,this_shift,axis=0)
+
+    n_1=0
+    while n_1<len(LST_shift):
+        this_shift+=1
+        n = np.argwhere(LST_shift==this_shift)[0][0]
+        n_1 = np.argwhere(LST_shift==this_shift)[-1][0]+1
+        var[:,:,n:]=np.roll(var[:,:,n:],1,axis=0)
+
+    return var
