@@ -1,7 +1,7 @@
 import matplotlib.cm as cm
 import atmopy.obs_info as obs_info
 import config as cfg
-from atmopy.utils import get_res
+from atmopy.geo_info import get_res
 import numpy as np
 oinfo = obs_info.ObsInfo()
 

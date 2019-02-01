@@ -204,14 +204,6 @@ def calc_distance_coord(lat1,lon1,lat2,lon2):
 
     return d
 
-def get_res(s):
-    return int(s.rpartition('km')[0].split('_')[-1])
-
-def is_month(month):
-    if cfg.smonth>cfg.emonth:
-        return (month >= cfg.smonth) | (month <= cfg.emonth)
-    elif cfg.smonth<=cfg.emonth:
-        return  (month >= cfg.smonth) & (month <= cfg.emonth)
 
 def eq_recta(x1,y1,x2,y2):
 
@@ -220,12 +212,6 @@ def eq_recta(x1,y1,x2,y2):
     b = y1-a*x1
 
     return a,b
-
-def get_zb_res():
-    all_res = np.asarray([get_res(wrun) for wrun in cfg.wrf_runs])
-    zb_res = np.int(cfg.zb*np.max(all_res)/int(cfg.ref_res))
-    return zb_res
-
 
 def shift_LST_2D(var,LST_shift):
 

@@ -77,3 +77,10 @@ def pptime2date(files):
 
         dates = nc.num2date(times[:],units=times.units,calendar=times.calendar)
     return dates
+
+
+def is_month(month,smonth,emonth):
+    if smonth>emonth:
+        return (month >= smonth) | (month <= emonth)
+    elif smonth<=emonth:
+        return  (month >= smonth) & (month <= emonth)
