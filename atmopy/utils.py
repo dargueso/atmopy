@@ -204,8 +204,8 @@ def calc_distance_coord(lat1,lon1,lat2,lon2):
 
     return d
 
-    def get_res(s):
-        return int(s.rpartition('km')[0].split('_')[-1])
+def get_res(s):
+    return int(s.rpartition('km')[0].split('_')[-1])
 
 def is_month(month):
     if cfg.smonth>cfg.emonth:
