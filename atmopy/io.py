@@ -1,6 +1,6 @@
-
+import config as cfg
 import xarray as xr
-from atmopy.utils import is_month
+from atmopy.time_utils import is_month
 import atmopy.obs_info as obs_info
 from glob import glob
 import pandas as pd
@@ -61,7 +61,7 @@ def load_sel_seasons_wrf(wrun,freq,var,levs=[]):
 
     fin = load_wrf(wrun,freq,var,levs)
     finwrf_years = fin.sel(time=slice("%s-%s" %(cfg.syear,cfg.smonth),"%s-%s" %(cfg.eyear,cfg.emonth)))
-    finwrf_seas  = finwrf_years.sel(time=is_month(finwrf_years['time.month']))
+    finwrf_seas  = finwrf_years.sel(time=is_month(finwrf_years['time.month'],cfg.smonth,cfg.emonth))
 
     return finwrf_seas
 
@@ -69,14 +69,14 @@ def load_sel_seasons_obs(obs,freq):
 
     finobs = load_obs_pr(obs,freq)
     finobs_years = finobs.sel(time=slice("%s-%s" %(cfg.syear,cfg.smonth),"%s-%s" %(cfg.eyear,cfg.emonth)))
-    finobs_seas  = finobs_years.sel(time=is_month(finobs_years['time.month']))
+    finobs_seas  = finobs_years.sel(time=is_month(finobs_years['time.month'],cfg.smonth,cfg.emonth))
 
     return finobs_seas
 
 def load_sel_seasons_era5(fin):
 
     fin_years = fin.sel(time=slice("%s-%s" %(cfg.syear,cfg.smonth),"%s-%s" %(cfg.eyear,cfg.emonth)))
-    fin_seas  = fin_years.sel(time=is_month(fin_years['time.month']))
+    fin_seas  = fin_years.sel(time=is_month(fin_years['time.month'],cfg.smonth,cfg.emonth))
     fin_seas.rename({'tp':'PR'},inplace=True)
 
     fin_seas.PR.values = fin_seas.PR.values*1000/24.

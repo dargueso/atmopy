@@ -24,7 +24,13 @@ def get_corners_loc(loc):
 
     return lats,lons
 
+def get_res(wrun):
+    return int(wrun.rpartition('km')[0].split('_')[-1])
 
+def get_zb_res():
+    all_res = np.asarray([get_res(wrun) for wrun in cfg.wrf_runs])
+    zb_res = np.int(cfg.zb*np.max(all_res)/int(cfg.ref_res))
+    return zb_res
 
 
 class geowrf_info():
