@@ -296,7 +296,7 @@ def create_zlevs_netcdf(var,filename):
     outlev  = outfile.createVariable('levels','f',('lev'),fill_value=1e20)
 
     setattr(outlev,"standard_name","height")
-    setattr(outlev,"long_name","height_above_ground_leve")
+    setattr(outlev,"long_name","height_above_ground_level")
     setattr(outlev,"units","m")
     setattr(outlev,"_CoordinateAxisType","z")
 
@@ -345,6 +345,84 @@ def create_zlevs_netcdf(var,filename):
     #setattr(outfile,'comments','files created from wrf outputs %s/%s' %(path_in,patt))
 
     outfile.close()
+###########################################################
+###########################################################
+
+def create_netcdf_vcross(var,filename):
+    print(('\n Create output file %s') %(filename))
+
+    otimes = var['times']
+    outfile = nc.Dataset(filename,'w',format='NETCDF4_CLASSIC',zlib=True, complevel=5)
+
+    outfile.createDimension('time',None)
+    outfile.createDimension('bnds',2)
+    outfile.createDimension('lev',var['values'].shape[1])
+    outfile.createDimension('x',var['values'].shape[2])
+
+    outvar  = outfile.createVariable(var['varname'],'f',('time','lev','x'),fill_value=1e20)
+
+
+    outtime = outfile.createVariable('time','f8','time',fill_value=1e20)
+    outtime_bnds = outfile.createVariable('time_bnds','f8',('time','bnds'),fill_value=1e20)
+    outlat  = outfile.createVariable('lat','f',('x'),fill_value=1e20)
+    outlon  = outfile.createVariable('lon','f',('x'),fill_value=1e20)
+    outlev  = outfile.createVariable('levels','f',('lev'),fill_value=1e20)
+
+    setattr(outlat,"standard_name","latitude")
+    setattr(outlat,"long_name","Latitude")
+    setattr(outlat,"units","degrees_north")
+    setattr(outlat,"_CoordinateAxisType","Lat")
+
+    setattr(outlon,"standard_name","longitude")
+    setattr(outlon,"long_name","Longitude")
+    setattr(outlon,"units","degrees_east")
+    setattr(outlon,"_CoordinateAxisType","Lon")
+    if var['vcross'] == 'p':
+        setattr(outlev,"standard_name","pressure")
+        setattr(outlev,"long_name","pressure_level")
+        setattr(outlev,"units","hPa")
+        setattr(outlev,"_CoordinateAxisType","z")
+    elif var['vcross'] == 'z':
+        setattr(outlev,"standard_name","height")
+        setattr(outlev,"long_name","height_above_ground_level")
+        setattr(outlev,"units","m")
+        setattr(outlev,"_CoordinateAxisType","z")
+
+    setattr(outtime,"standard_name","time")
+    setattr(outtime,"long_name","Time")
+    setattr(outtime,"units","hours since 1949-12-01 00:00:00")
+    setattr(outtime,"calendar","standard")
+
+    setattr(outtime_bnds,"standard_name","time_bnds")
+    setattr(outtime_bnds,"long_name","time_bounds")
+    setattr(outtime_bnds,"units","hours since 1949-12-01 00:00:00")
+    setattr(outtime_bnds,"calendar","standard")
+
+
+    step_seconds = np.int((otimes[1]-otimes[0]).total_seconds())
+
+    outtime[:] = nc.date2num([otimes[x] for x in range(len(otimes))],units='hours since 1949-12-01 00:00:00',calendar='standard')
+
+    outtime_bnds[:,0]=nc.date2num([otimes[x]-dt.timedelta(seconds=step_seconds/2.) for x in range(len(otimes))],units='hours since 1949-12-01 00:00:00',calendar='standard')
+    outtime_bnds[:,1]=nc.date2num([otimes[x]+dt.timedelta(seconds=step_seconds/2.) for x in range(len(otimes))],units='hours since 1949-12-01 00:00:00',calendar='standard')
+
+
+    outlat[:]  = var['lat'][:]
+    outlon[:]  = var['lon'][:]
+    outlev[:]  = var['vlevs'][:]
+
+    outvar[:] = var['values'][:]
+
+    for outatt in list(var['atts'].keys()):
+        setattr(outvar,outatt,var['atts'][outatt])
+
+    setattr(outfile,"creation_date",dt.datetime.today().strftime('%Y-%m-%d'))
+    setattr(outfile,'author','Daniel Argueso @UIB')
+    setattr(outfile,'contact','d.argueso@uib.es')
+    #setattr(outfile,'comments','files created from wrf outputs %s/%s' %(path_in,patt))
+
+    outfile.close()
+
 
 ###########################################################
 ###########################################################
