@@ -852,6 +852,20 @@ def compute_CLDFRA(filename,inputinf=None):
 
     return cldfra,atts
 
+def compute_CTT(filename,inputinf=None):
+    """Function to calculate cloud top temperature
+    """
+
+    ncfile = nc.Dataset(filename,'r')
+
+    ctt = wrf.getvar(ncfile,'ctt',wrf.ALL_TIMES,units='K',fill_nocloud=True,missing=const.missingval)
+
+    atts = {"standard_name": "Cloud_Top_Temperature",
+            "long_name"    : "cloud top temperature",
+            "units"        : "K"}
+
+    return ctt, atts
+
 def compute_SMOIS(filename,inputinf=None):
     """ Function to calculate soil moisture at different levels
     """
@@ -867,3 +881,24 @@ def compute_SMOIS(filename,inputinf=None):
             'layers'       : zs}
 
     return smois,atts
+
+def compute_TT(filename, inputinf=None):
+    """ Function to calculate temperature in degC at model full levels from WRF outputs
+        It also provides variable attributes CF-Standard
+    """
+
+
+    ncfile = nc.Dataset(filename,'r')
+    theta = ncfile['T'][:] + 300.
+    ptot  = ncfile['PB'][:] + ncfile['P'][:]
+    temp = theta*(ptot/1000)*(2/7)
+
+    atts = {"standard_name": "air_temperature",
+            "long_name":  "Air temperature",
+            "units"    :  "degC"                      ,
+            "hgt"       :  "full_model_level"                    ,
+            }
+
+    ncfile.close()
+
+    return temp,atts

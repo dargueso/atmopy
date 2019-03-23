@@ -231,3 +231,22 @@ def shift_LST_2D(var,LST_shift):
         var[:,:,n:]=np.roll(var[:,:,n:],1,axis=0)
 
     return var
+
+def shift_LST_3D(var,LST_shift):
+
+    """Function to displace hours from UTC (WRF output) to Local Solar time
+       using a 3D array with LST shifts (time, lon).
+       The variable to shift is expected to have (time,level,lat,lon) dimensions.
+    """
+
+    this_shift=LST_shift[0]
+    var = np.roll(var,this_shift,axis=0)
+
+    n_1=0
+    while n_1<len(LST_shift):
+        this_shift+=1
+        n = np.argwhere(LST_shift==this_shift)[0][0]
+        n_1 = np.argwhere(LST_shift==this_shift)[-1][0]+1
+        var[:,:,:,n:]=np.roll(var[:,:,:,n:],1,axis=0)
+
+    return var

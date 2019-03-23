@@ -27,6 +27,7 @@ from glob import glob
 from dateutil.relativedelta import relativedelta
 import wrf as wrf
 import atmopy.compute_vars as cvars
+import calendar
 
 
 def sel_wrfout_files(filelist,sdate,edate):
@@ -676,6 +677,41 @@ def create_daily_files(fullpathout,syear,eyear,smonth,emonth,patt,varn):
 
         y = edate.year
         m = edate.month
+
+###########################################################
+###########################################################
+def create_daily_files_byday(fullpathout,syear,eyear,smonth,emonth,patt,varn):
+
+
+    y = syear
+    m = smonth
+
+    while (y < eyear or (y == eyear and m <= emonth)):
+
+        for d in range(1,calendar.monthrange(y, m)[1]+1):
+
+            sdate="%s-%02d-%02d" %(y,m,d)
+            sdate_m="%s-%s" %(y,str(m).rjust(2,"0"))
+            print("%s/%s_%s_%s.nc" %(fullpathout,patt,varn,sdate))
+            fin = "%s/%s_%s_%s.nc" %(fullpathout,patt,varn,sdate)
+            fout = fin.replace("01H_%s" %(varn),"DAY_%s" %(varn))
+
+
+            print("Input: ", fin)
+            print("Output: ", fout)
+
+            os.system("cdo daymean %s %s" %(fin,fout))
+
+        fin_all_aux = "%s/%s_%s_%s-*" %(fullpathout,patt,varn,sdate_m)
+        fin_all = fin_all_aux.replace("01H_%s" %(varn),"DAY_%s" %(varn))
+        fout_day = fin_all.replace("-*",".nc")
+        os.system("cdo cat %s %s" %(fin_all,fout_day))
+        os.system("rm -f %s" %(fin_all))
+
+        edate = dt.datetime(y,m,1) + relativedelta(months=1)
+        y = edate.year
+        m = edate.month
+
 
 ###########################################################
 ###########################################################

@@ -35,25 +35,10 @@ def get_zb_res():
 
 class geowrf_info():
 
-    geofile_wrf = {"Oned_32km_ERA5_HVC": '%s/geo_em.d01.Oned_32km_ERA5.nc'%(cfg.geoem_in),
-                   "Oned_32km_ERA5_HVC_NC": '%s/geo_em.d01.Oned_32km_ERA5.nc'%(cfg.geoem_in),
-                   "Oned_32km_ERA5_HVC_SH": '%s/geo_em.d01.Oned_32km_ERA5.nc'%(cfg.geoem_in),
-                   "Oned_32km_ERA5_CMIP5anom_HVC": '%s/geo_em.d01.Oned_32km_ERA5.nc'%(cfg.geoem_in),
-                   "Oned_16km_ERA5_HVC": '%s/geo_em.d01.Oned_16km_ERA5.nc'%(cfg.geoem_in),
-                   "Oned_16km_ERA5_HVC_NC": '%s/geo_em.d01.Oned_16km_ERA5.nc'%(cfg.geoem_in),
-                   "Oned_16km_ERA5_HVC_SH": '%s/geo_em.d01.Oned_16km_ERA5.nc'%(cfg.geoem_in),
-                   "Oned_8km_ERA5_HVC": '%s/geo_em.d01.Oned_8km_ERA5.nc'%(cfg.geoem_in),
-                   "Oned_8km_ERA5_HVC_NC": '%s/geo_em.d01.Oned_8km_ERA5.nc'%(cfg.geoem_in),
-                   "Oned_8km_ERA5_HVC_SH": '%s/geo_em.d01.Oned_8km_ERA5.nc'%(cfg.geoem_in),
-                   "Oned_4km_ERA5_HVC": '%s/geo_em.d01.Oned_4km_ERA5.nc'%(cfg.geoem_in),
-                   "Oned_4km_ERA5_HVC_SH": '%s/geo_em.d01.Oned_4km_ERA5.nc'%(cfg.geoem_in),
-                   "Oned_4km_ERA5_HVC_NC": '%s/geo_em.d01.Oned_4km_ERA5.nc'%(cfg.geoem_in),
-                   "Oned_2km_ERA5_HVC": '%s/geo_em.d01.Oned_2km_ERA5.nc'%(cfg.geoem_in),
-                   "Oned_2km_ERA5_HVC_SH": '%s/geo_em.d01.Oned_2km_ERA5.nc'%(cfg.geoem_in)}
+
 
     def get_geofile(self,wrun):
-
-       geofile = xr.open_dataset(self.geofile_wrf[wrun])
+       geofile = xr.open_dataset("%s/geo_em.d01.Oned_%skm_ERA5.nc" %(cfg.geoem_in,get_res(wrun)))
        geofile.coords['south_north']=geofile.XLAT_M.values[0,:,0]
        geofile.coords['west_east']=geofile.XLONG_M.values[0,0,:]
 
