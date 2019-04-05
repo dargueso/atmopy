@@ -402,6 +402,48 @@ def compute_uvmet10(filename,inputinf=None):
     ncfile.close()
     return wa,atts
 
+def compute_U10MET(filename,inputinf=None):
+    """ Function to calculate zonal 10-m windspeed rotated to Earth coordinates
+        from WRF OUTPUTS
+        It also provides variable attributes CF-Standard
+    """
+
+    ncfile = nc.Dataset(filename,'r')
+
+    #Get vertical wind using wrf-python
+
+    ua = np.squeeze(wrf.getvar(ncfile, "uvmet10",wrf.ALL_TIMES)[0,:])
+
+    atts = {"standard_name": "zonal_wind_speed",
+            "long_name":  "Zonal earth coordinates wind speed",
+            "units"    :  "m s-1"                      ,
+            "hgt"       :  "10 m"                    ,
+            }
+
+    ncfile.close()
+    return ua,atts
+
+def compute_V10MET(filename,inputinf=None):
+    """ Function to calculate meridional 10-m windspeed rotated to Earth coordinates
+        from WRF OUTPUTS
+        It also provides variable attributes CF-Standard
+    """
+
+    ncfile = nc.Dataset(filename,'r')
+
+    #Get vertical wind using wrf-python
+
+    va = np.squeeze(wrf.getvar(ncfile, "uvmet10",wrf.ALL_TIMES)[1,:])
+
+    atts = {"standard_name": "meridional_wind_speed",
+            "long_name":  "Meridional earth coordinates wind speed",
+            "units"    :  "m s-1"                      ,
+            "hgt"       :  "10 m"                    ,
+            }
+
+    ncfile.close()
+    return va,atts
+
 
 def compute_WDIR10(filename,inputinf=None):
     """ Function to calculate 10-m wind direction on Earth coordinates
@@ -881,3 +923,24 @@ def compute_SMOIS(filename,inputinf=None):
             'layers'       : zs}
 
     return smois,atts
+
+def compute_TT(filename, inputinf=None):
+    """ Function to calculate temperature in degC at model full levels from WRF outputs
+        It also provides variable attributes CF-Standard
+    """
+
+
+    ncfile = nc.Dataset(filename,'r')
+    theta = ncfile['T'][:] + 300.
+    ptot  = ncfile['PB'][:] + ncfile['P'][:]
+    temp = theta*(ptot/1000)*(2/7)
+
+    atts = {"standard_name": "air_temperature",
+            "long_name":  "Air temperature",
+            "units"    :  "degC"                      ,
+            "hgt"       :  "full_model_level"                    ,
+            }
+
+    ncfile.close()
+
+    return temp,atts

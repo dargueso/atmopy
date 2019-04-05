@@ -53,11 +53,17 @@ def get_wrf_color_and_ticks(datasets,cmap='viridis',version_sep='HVC'):
                 hatch.append('/')
                 label.append('_nolegend_')
                 xtick.append(str(get_res(dset)) + "km"+ "_EX")
-            else:
+
+            elif version == '':
                 line[dset]='-'
                 hatch.append('')
                 label.append(str(get_res(dset)) + "km")
                 xtick.append(str(get_res(dset)) + "km"+ "_DP")
+            else:
+                line[dset]='-.'
+                hatch.append('/')
+                label.append('_nolegend_')
+                xtick.append(str(get_res(dset)) + "km"+ version)
 
     return colorb,xtick,line,hatch,label
 
