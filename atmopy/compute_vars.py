@@ -944,3 +944,31 @@ def compute_TT(filename, inputinf=None):
     ncfile.close()
 
     return temp,atts
+
+def compute_PW(filename,inputinf=None):
+    """ Function to calculate precipitable water in the column
+    """
+
+    ncfile=nc.Dataset(filename,'r')
+
+    pw = wrf.getvar(ncfile,"pw",wrf.ALL_TIMES)
+
+    atts = {"standard_name": "precipitable_water",
+            "long_name"    : "column precipitable water",
+            "units"        : "kg m-2"}
+
+    return pw,atts
+
+def compute_OMEGA(filename,inputinf=None):
+    """ Function to calculate vertical velocity in pressure units
+    """
+
+    ncfile=nc.Dataset(filename,'r')
+
+    omega = wrf.getvar(ncfile,"omega",wrf.ALL_TIMES)
+
+    atts = {"standard_name": "omega",
+            "long_name"    : "vertical windspeed in pressure units",
+            "units"        : "Pa s-1"}
+
+    return omega,atts
