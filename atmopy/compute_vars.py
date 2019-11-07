@@ -972,3 +972,33 @@ def compute_OMEGA(filename,inputinf=None):
             "units"        : "Pa s-1"}
 
     return omega,atts
+
+def compute_W5L(filename,inputinf=None):
+    """ Function to calculate vertical velocity in the lowest 5 levels
+    """
+
+    ncfile = nc.Dataset(filename,'r')
+
+    w5l =  ncfile['W'][:,:5,:,:].mean(axis=1).squeeze()
+
+    atts = {"standard_name": "W5L",
+            "long_name"    : "vertical windspeed in the lowest 5 model levels",
+            "units"        : "m s-1"}
+
+    return w5l,atts
+
+
+def compute_TH5L(filename,inputinf=None):
+    """ Function to calculate theta in the lowest 5 levels
+    """
+
+    ncfile = nc.Dataset(filename,'r')
+
+    th5l = ncfile['T'][:,:5,:,:].mean(axis=1).squeeze() + 300.
+
+
+    atts = {"standard_name": "TH5L",
+            "long_name"    : "theta in lowest 5 model levels",
+            "units"        : "K"}
+
+    return th5l,atts
