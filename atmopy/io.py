@@ -21,7 +21,7 @@ def load_wrf(wrun,freq,var,levs=[]):
 
     filesin = sorted(glob('%s/%s/20??-20??/%s_%s_%s_*.nc' %(cfg.path_in,wrun,patt_in,freq,var)))
     #print ('%s/%s/20??-20??/%s_%s_%s_*.nc' %(cfg.path_in,wrun,patt_in,freq,var))
-    fin = xr.open_mfdataset(filesin,concat_dim='time')
+    fin = xr.open_mfdataset(filesin,combine='by_coords')
 
     fin.coords['y']=fin.lat.values[0,:,0]
     fin.coords['x']=fin.lon.values[0,0,:]
