@@ -1002,3 +1002,79 @@ def compute_TH5L(filename,inputinf=None):
             "units"        : "K"}
 
     return th5l,atts
+
+def compute_TVAVG(filename,inputinf=None):
+    """ Function to calculate air density at model levels using
+        ideal gas law approximation
+    """
+
+    epsilon_gamma = const.epsilon_gamma
+    Rd=const.Rd# J kg-1 K-1
+    #Rv=const.Rv# J kg-1 K-1
+    #cp=1005 # J kg-1 K-1 at 300K
+    #c_pv=1864# J kg-1 K-1 at 300K
+    ncfile = nc.Dataset(filename,'r')
+
+
+
+    p = wrf.getvar(ncfile,"pressure",wrf.ALL_TIMES) #in hPA
+    #qvapor = ncfile.variables['QVAPOR'][:]
+    #p_v = qvapor*p(100.*(epsilon_gamma+qvapor)) # in hPA
+    tk = wrf.getvar(ncfile,"tk",wrf.ALL_TIMES)
+    zstag = wrf.getvar(ncfile,"zstag",wrf.ALL_TIMES) #in m
+
+
+    #p_d=p-p_v
+
+    #rho_d=p_d*100.*tk/Rd #Converting from hPa to Pa
+    #rho_v=p_v*100.*tk/Rs_v
+    rho_d=p*100.*tk/Rd
+
+    #m_d = rho_d*thick_lev
+    #m_v = rho_d*thick_lev
+
+
+    if zstag.ndim == 3:
+
+        #No times
+        thick_lev = zstag[1:,:,:]
+        m_d = rho_d*thick_lev
+        m_v = rho_d*thick_lev
+        #tvavg = np.average(tk,axis=0,weights=(m_d*c_pd + m_v*c_pv)).squeeze()
+        tvavg = np.average(tk,axis=0,weights=(rho_d)).squeeze()
+    if zstag.ndim == 4:
+        #With times
+        #No times
+        thick_lev = zstag[:,1:,:,:]
+        m_d = rho_d*thick_lev
+        m_v = rho_d*thick_lev
+        tvavg = np.average(tk,axis=1,weights=(rho_d)).squeeze()
+        #tvavg = np.average(tk,axis=1,weights=(m_d*c_pd + m_v*c_pv)).squeeze()
+
+
+    atts = {"standard_name": "TVAVG",
+            "long_name"    : "mean vertical atmospheric temperature",
+            "units"        : "K"}
+
+    return tvavg,atts
+
+def compute_rho(filename,inputinf=None):
+    """ Function to approximate air density
+    """
+
+    Rd=const.Rd
+
+    ncfile = nc.Dataset(filename,'r')
+
+    p = wrf.getvar(ncfile,"pressure",wrf.ALL_TIMES) #in hPA
+    tk = wrf.getvar(ncfile,"tk",wrf.ALL_TIMES)
+
+    rho=p*100.*tk/Rd
+
+
+
+    atts = {"standard_name": "RHO",
+            "long_name"    : "air density",
+            "units"        : "kg m-3"}
+
+    return rho,atts
