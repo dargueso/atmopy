@@ -23,6 +23,7 @@ import numpy as np
 import datetime as dt
 import wrf as wrf
 from atmopy.constants import const as const
+from scipy.ndimage import gaussian_filter
 
 #wrf.set_cache_size(0)
 wrf.disable_xarray()
@@ -969,6 +970,25 @@ def compute_OMEGA(filename,inputinf=None):
 
     atts = {"standard_name": "omega",
             "long_name"    : "vertical windspeed in pressure units",
+            "units"        : "Pa s-1"}
+
+    return omega,atts
+
+def compute_G5OMEGA(filename,inputinf=None):
+    """ Function to calculate vertical velocity in pressure units
+        Gaussian Filtered in the horizontal
+    """
+
+    ncfile=nc.Dataset(filename,'r')
+
+    omega = wrf.getvar(ncfile,"omega",wrf.ALL_TIMES)
+    aux = gaussian_filter(omega.values,(0,5,5),mode='nearest')
+
+    omega.values=aux
+
+
+    atts = {"standard_name": "omega",
+            "long_name"    : "vertical windspeed in pressure units (gaussian filtered 5 std)",
             "units"        : "Pa s-1"}
 
     return omega,atts
