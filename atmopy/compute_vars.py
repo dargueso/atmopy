@@ -245,6 +245,38 @@ def compute_PRNC(filename, inputinf=None):
 
     return prnc,atts
 
+def compute_PRCC(filename, inputinf=None):
+    """Function to calculate nconvective precipitation flux from a wrf output
+       that uses convective parameterization
+       It also provides variable attribute CF-Standard
+    """
+
+    ncfile = nc.Dataset(filename,'r')
+
+    ## Specific to PR
+    if hasattr(ncfile,'PREC_ACC_DT'):
+        accum_dt = getattr(ncfile,'PREC_ACC_DT')
+    else:
+        print(("NO PREC_ACC_DT in input file. Set to default %s min" %(inputinf['acc_dt'])))
+        accum_dt = int(inputinf['acc_dt'][:])
+
+
+    ## Computing diagnostic
+    prnc_acc = ncfile.variables['PREC_ACC_C'][:]
+
+    ## Deacumulating over prac_acc_dt (namelist entry)
+    prnc = prnc_acc/(accum_dt*60.)
+
+
+
+    atts = {"standard_name": "convective_precipitation_flux",
+                    "long_name"    : "convective total precipitation flux",
+                    "units"        : "kg m-2 s-1"}
+
+    ncfile.close()
+
+    return prnc,atts
+
 def compute_PRACC(filename,inputinf=None):
     """Function to calculate precipitation flux from a wrf output
        It also provides variable attribute CF-Standard
@@ -1023,6 +1055,18 @@ def compute_TH5L(filename,inputinf=None):
 
     return th5l,atts
 
+def compute_THETA(filename,inputinf=None):
+    """ Function to calculate theta
+    """
+    ncfile = nc.Dataset(filename,'r')
+    th = wrf.getvar(ncfile,"theta",wrf.ALL_TIMES) #in hPA
+
+    atts = {"standard_name": "THETA",
+            "long_name"    : "potential temperature",
+            "units"        : "K"}
+
+    return th,atts
+    
 def compute_TVAVG(filename,inputinf=None):
     """ Function to calculate air density at model levels using
         ideal gas law approximation

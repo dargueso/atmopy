@@ -690,7 +690,7 @@ def create_daily_files_byday(fullpathout,syear,eyear,smonth,emonth,patt,varn):
 
         for d in range(1,calendar.monthrange(y, m)[1]+1):
 
-            sdate="%s-%02d-%02d" %(y,m,d)
+            sdate="%s-%02d_%02d" %(y,m,d)
             sdate_m="%s-%s" %(y,str(m).rjust(2,"0"))
             print("%s/%s_%s_%s.nc" %(fullpathout,patt,varn,sdate))
             fin = "%s/%s_%s_%s.nc" %(fullpathout,patt,varn,sdate)
@@ -702,7 +702,7 @@ def create_daily_files_byday(fullpathout,syear,eyear,smonth,emonth,patt,varn):
 
             os.system("cdo daymean %s %s" %(fin,fout))
 
-        fin_all_aux = "%s/%s_%s_%s-*" %(fullpathout,patt,varn,sdate_m)
+        fin_all_aux = "%s/%s_%s_%s_*" %(fullpathout,patt,varn,sdate_m)
         fin_all = fin_all_aux.replace("01H_%s" %(varn),"DAY_%s" %(varn))
         fout_day = fin_all.replace("-*",".nc")
         os.system("cdo cat %s %s" %(fin_all,fout_day))
