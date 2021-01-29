@@ -900,7 +900,7 @@ def compute_Q2DIV(filename,inputinf=None):
 
     return Q2DIV,atts
 
-def compute QDIV(filename,inputinf=None):
+def compute_QDIV(filename,inputinf=None):
     """ Function to calculate moisture divergence 3D"""
     ncfile=nc.Dataset(filename,'r')
     ua = wrf.getvar(ncfile,"U",wrf.ALL_TIMES)
@@ -909,7 +909,7 @@ def compute QDIV(filename,inputinf=None):
     dx = ncfile.DX
     dy = ncfile.DY
 
-    QDIV = compute_div_dx(u*q2,v*q2,dx,dy)
+    QDIV = compute_div_dx(ua*qv,va*qv,dx,dy)
 
     atts = {"standard_name": "moisture_divergence",
             "long_name"    : "water vapor mixing ratio divergence",
