@@ -900,6 +900,23 @@ def compute_Q2DIV(filename,inputinf=None):
 
     return Q2DIV,atts
 
+def compute QDIV(filename,inputinf=None):
+    """ Function to calculate moisture divergence 3D"""
+    ncfile=nc.Dataset(filename,'r')
+    ua = wrf.getvar(ncfile,"U",wrf.ALL_TIMES)
+    va = wrf.getvar(ncfile,"V",wrf.ALL_TIMES)
+    qv = wrf.getvar(ncfile,"QVAPOR",wrf.ALL_TIMES)
+    dx = ncfile.DX
+    dy = ncfile.DY
+
+    QDIV = compute_div_dx(u*q2,v*q2,dx,dy)
+
+    atts = {"standard_name": "moisture_divergence",
+            "long_name"    : "water vapor mixing ratio divergence",
+            "units"        : "s-1"}
+
+    return QDIV,atts
+
 def compute_THETAE(filename,inputinf=None):
     """ Function to calculate equivalent potential temperature """
 
@@ -1066,7 +1083,7 @@ def compute_THETA(filename,inputinf=None):
             "units"        : "K"}
 
     return th,atts
-    
+
 def compute_TVAVG(filename,inputinf=None):
     """ Function to calculate air density at model levels using
         ideal gas law approximation
