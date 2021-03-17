@@ -52,7 +52,7 @@ def compute_WRFvar (filename,varname,inputinf=None):
         possibles.update(locals())
         compute=possibles.get(method_name)
 
-        varval, varatt=compute(filename)
+        varval, varatt=compute(filename,inputinf)
 
     ncfile.close()
 
@@ -192,7 +192,7 @@ def compute_PR(filename, inputinf=None):
         accum_dt = getattr(ncfile,'PREC_ACC_DT')
     else:
         print(("NO PREC_ACC_DT in input file. Set to default %s min" %(inputinf['acc_dt'])))
-        accum_dt = int(inputinf['acc_dt'][:])
+        accum_dt = int(inputinf['acc_dt'])
 
     ## Extracting variables required for diagnostic
     for var in wrfvames:
@@ -226,7 +226,7 @@ def compute_PRNC(filename, inputinf=None):
         accum_dt = getattr(ncfile,'PREC_ACC_DT')
     else:
         print(("NO PREC_ACC_DT in input file. Set to default %s min" %(inputinf['acc_dt'])))
-        accum_dt = int(inputinf['acc_dt'][:])
+        accum_dt = int(inputinf['acc_dt'])
 
 
     ## Computing diagnostic
