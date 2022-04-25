@@ -196,11 +196,14 @@ def calc_distance_coord(lat1,lon1,lat2,lon2):
        This uses the spherical law of cosines
        lat1,lat2,lon1,lon2 : input coordinates (degrees)
        d : distance (m)"""
+
+    earth_radius=6371000 #Earth radius in m
+
     lat1r = lat1*np.pi/180.
     lat2r = lat2*np.pi/180.
     lon1r = lon1*np.pi/180.
     lon2r = lon2*np.pi/180.
-    d = np.arccos(np.sin(lat1r)*np.sin(lat2r) + np.cos(lat1r)*np.cos(lat2r)*np.cos(lon2r-lon1r))*const.earth_radius
+    d = np.arccos(np.sin(lat1r)*np.sin(lat2r) + np.cos(lat1r)*np.cos(lat2r)*np.cos(lon2r-lon1r))*earth_radius
 
     return d
 
